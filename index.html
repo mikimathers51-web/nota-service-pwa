@@ -3,727 +3,1223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#667eea">
+    <meta name="theme-color" content="#667eea" id="themeColorMeta">
+    <title>Nota Service HP - Profesional</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Nota Service HP">
-    
-    <title>Nota Service HP - Profesional</title>
-    
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
-    
+    <meta name="apple-mobile-web-app-title" content="Nota Service">
+    <meta name="mobile-web-app-capable" content="yes">
+
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/esc-pos-encoder@1.2.0/dist/esc-pos-encoder.min.js"></script>
-    
     <style>
-        *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-        :root{--primary:#667eea;--secondary:#764ba2;--success:#4caf50;--warning:#ff9800;--danger:#f44336;--info:#00bcd4;--bg:linear-gradient(135deg,#667eea 0%,#764ba2 100%);--card-bg:white;--text:#333;--border:#e4e4e4}
-        body.dark-mode{--bg:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);--card-bg:#16213e;--text:#eaeaea;--border:#2a2a4a}
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);min-height:100vh;padding:15px;padding-bottom:30px;color:var(--text)}
-        .container{max-width:500px;margin:0 auto}
-        .header{text-align:center;padding:20px 0;color:white}
-        .header-icon{width:70px;height:70px;background:white;border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:35px;box-shadow:0 10px 30px rgba(0,0,0,0.2)}
-        .header h1{font-size:22px;margin-bottom:5px}
-        .header p{font-size:13px;opacity:0.8}
-        .header-controls{display:flex;justify-content:center;gap:10px;margin-top:10px;flex-wrap:wrap}
-        .btn-icon{background:rgba(255,255,255,0.2);border:none;color:white;padding:8px 12px;border-radius:20px;cursor:pointer;font-size:12px;backdrop-filter:blur(10px)}
-        .install-prompt{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(150%);background:white;border-radius:16px;padding:16px 20px;box-shadow:0 10px 40px rgba(0,0,0,0.3);z-index:9999;max-width:90%;width:400px;transition:transform 0.4s}
-        .install-prompt.show{transform:translateX(-50%) translateY(0)}
-        .install-content{display:flex;align-items:center;gap:12px}
-        .install-icon{width:50px;height:50px;background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}
-        .install-text{flex:1}
-        .install-text strong{color:#333;font-size:15px}
-        .install-text small{color:#666;font-size:12px}
-        .btn-install{background:var(--primary);color:white;border:none;padding:10px 16px;border-radius:8px;font-weight:600;cursor:pointer}
-        .btn-close-install{background:none;border:none;color:#999;cursor:pointer;font-size:18px}
-        .connection-status{position:fixed;top:0;left:0;right:0;background:#f44336;color:white;text-align:center;padding:8px;font-size:12px;transform:translateY(-100%);transition:transform 0.3s;z-index:9998}
-        .connection-status.offline{transform:translateY(0)}
-        .workflow-info{background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border-radius:15px;padding:15px;margin-bottom:20px;color:white;border:1px solid rgba(255,255,255,0.2)}
-        .workflow-steps{display:flex;justify-content:space-between;font-size:11px;margin-top:10px}
-        .step{text-align:center;flex:1;opacity:0.6;transition:all 0.3s}
-        .step.active{opacity:1;font-weight:700;transform:scale(1.1)}
-        .step div:first-child{font-size:20px;margin-bottom:4px}
-        .nota-type-selector{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:20px}
-        .type-btn{padding:15px 5px;border:3px solid rgba(255,255,255,0.3);border-radius:12px;background:rgba(255,255,255,0.1);color:white;cursor:pointer;text-align:center;backdrop-filter:blur(10px);transition:all 0.3s}
-        .type-btn.active{background:white;color:var(--primary);border-color:white;transform:scale(1.05);box-shadow:0 10px 30px rgba(0,0,0,0.2)}
-        .type-btn .icon{font-size:24px;margin-bottom:5px;display:block}
-        .type-btn .label{font-size:11px;font-weight:700;display:block}
-        .form-card,.preview-card,.history-card,.settings-card{background:var(--card-bg);border-radius:20px;padding:25px;box-shadow:0 10px 40px rgba(0,0,0,0.2);margin-bottom:20px;display:none}
-        .form-card.active,.preview-card.active,.history-card.active,.settings-card.active{display:block;animation:slideUp 0.3s ease}
-        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        .form-title{font-size:18px;color:var(--text);margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-        .form-group{margin-bottom:18px}
-        label{display:block;margin-bottom:6px;color:var(--text);font-weight:600;font-size:13px;text-transform:uppercase}
-        input,textarea,select{width:100%;padding:14px 16px;border:2px solid var(--border);border-radius:12px;font-size:15px;background:var(--card-bg);color:var(--text);font-family:inherit;transition:all 0.3s;-webkit-appearance:none}
-        input:focus,textarea:focus,select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(102,126,234,0.1)}
-        .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-        .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-        .input-with-button{display:flex;gap:8px}
-        .btn-import{padding:0 16px;background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:white;border:none;border-radius:12px;cursor:pointer;font-size:20px}
-        .checkbox-group{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(128,128,128,0.1);border-radius:10px;border:2px solid var(--border);cursor:pointer;margin-bottom:8px}
-        .checkbox-group input[type="checkbox"]{width:20px;height:20px;accent-color:var(--primary)}
-        .status-option{padding:12px;border:2px solid var(--border);border-radius:10px;text-align:center;cursor:pointer;background:var(--card-bg);transition:all 0.3s}
-        .status-option.active{border-color:var(--primary);background:rgba(102,126,234,0.1);color:var(--primary);font-weight:700}
-        .btn-primary{width:100%;padding:16px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:white;font-size:16px;font-weight:700;cursor:pointer;margin-top:10px;transition:all 0.3s}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(102,126,234,0.4)}
-        .btn-secondary{width:100%;padding:14px;border:2px solid var(--border);border-radius:12px;background:var(--card-bg);color:#666;font-size:14px;font-weight:600;cursor:pointer;margin-top:10px;transition:all 0.3s}
-        .btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
-        .nota-paper{background:white;border-radius:15px;padding:25px;margin-bottom:20px;position:relative;box-shadow:0 4px 15px rgba(0,0,0,0.1);color:#333;font-size:12px;overflow:hidden}
-        .nota-paper::before{content:"";position:absolute;top:0;left:0;width:100%;height:100%;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,0.02) 0px,rgba(0,0,0,0.02) 2px,transparent 2px,transparent 8px);pointer-events:none;z-index:0}
-        .nota-paper::after{content:"SERVICE HP";position:absolute;bottom:20px;right:20px;font-size:40px;font-weight:bold;color:rgba(0,0,0,0.05);transform:rotate(-15deg);pointer-events:none;z-index:0}
-        .nota-paper.terima{border:3px solid var(--warning);background:linear-gradient(to bottom,#fff8e1 0%,#ffffff 100%)}
-        .nota-paper.diagnosa{border:3px solid #2196f3;background:linear-gradient(to bottom,#e3f2fd 0%,#ffffff 100%)}
-        .nota-paper.selesai{border:3px solid var(--info);background:linear-gradient(to bottom,#e0f7fa 0%,#ffffff 100%)}
-        .nota-paper.ambil{border:3px solid var(--success);background:linear-gradient(to bottom,#e8f5e9 0%,#ffffff 100%)}
-        .nota-paper.batal{border:3px solid var(--danger);background:linear-gradient(to bottom,#ffebee 0%,#ffffff 100%)}
-        .nota-header{text-align:center;border-bottom:2px solid #dee2e6;padding-bottom:15px;margin-bottom:20px;position:relative;z-index:1}
-        .nota-logo{width:60px;height:60px;object-fit:contain;margin-bottom:10px;border-radius:10px}
-        .nota-type-badge{display:inline-block;padding:8px 20px;border-radius:25px;font-size:13px;font-weight:800;color:white;margin-bottom:10px}
-        .badge-terima{background:var(--warning)}.badge-diagnosa{background:#2196f3}.badge-selesai{background:var(--info)}.badge-ambil{background:var(--success)}.badge-batal{background:var(--danger)}
-        .nota-header h2{color:#333;font-size:20px;margin-bottom:5px}
-        .nota-slogan{font-size:11px;color:#666;margin-top:2px;font-style:italic}
-        .nota-alamat,.nota-telp{font-size:12px;color:#666;margin-bottom:3px}
-        .nota-id{background:#f8f9fa;padding:8px 15px;border-radius:8px;font-family:'Courier New',monospace;font-size:14px;margin-top:10px;display:inline-block;border:1px dashed #adb5bd;letter-spacing:0.5px}
-        .nota-section{margin-bottom:20px;padding-bottom:15px;border-bottom:1px dashed #dee2e6;position:relative;z-index:1}
-        .nota-section-title{font-size:12px;color:#868e96;text-transform:uppercase;margin-bottom:10px;font-weight:700}
-        .nota-row{display:flex;justify-content:space-between;margin-bottom:10px;font-size:14px}
-        .nota-label{color:#666;font-weight:500}.nota-value{color:#333;font-weight:600;text-align:right;max-width:60%;word-break:break-word}
-        .nota-total{background:#f8f9fa;padding:15px;border-radius:10px;border:2px solid #dee2e6}
-        .nota-footer{margin-top:25px;padding-top:15px;border-top:1px dashed #dee2e6;text-align:center;font-size:11px;color:#333}
-        .syarat-section{margin-top:20px;padding:10px;background:#f9f9f9;border-radius:8px;font-size:10px;color:#666;text-align:left;border-left:3px solid var(--primary)}
-        .syarat-section strong{font-size:11px;display:block;margin-bottom:5px;color:var(--primary)}
-        .action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:15px}
-        .btn-action{padding:12px;border:none;border-radius:12px;font-size:12px;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:white;transition:all 0.3s;text-align:center}
-        .btn-action:hover{transform:translateY(-3px)}
-        .btn-wa-text{background:linear-gradient(135deg,#25d366 0%,#128c7e 100%)}
-        .btn-wa-img{background:linear-gradient(135deg,#128c7e 0%,#075e54 100%)}
-        .btn-bluetooth{background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%)}
-        .btn-pdf{background:linear-gradient(135deg,#f44336 0%,#d32f2f 100%)}
-        .btn-preview-thermal{background:linear-gradient(135deg,#ff9800 0%,#f57c00 100%)}
-        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(100px);background:#333;color:white;padding:12px 24px;border-radius:25px;font-size:14px;opacity:0;transition:all 0.3s;z-index:1000}
-        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-        .history-item{padding:15px;border:2px solid var(--border);border-radius:12px;margin-bottom:10px;cursor:pointer;background:var(--card-bg);transition:all 0.3s}
-        .history-item:hover{transform:translateX(5px);border-color:var(--primary)}
-        .history-header{display:flex;justify-content:space-between;margin-bottom:8px}
-        .history-name{font-weight:700;font-size:15px;color:var(--text)}
-        .history-type{padding:4px 10px;border-radius:15px;font-size:11px;font-weight:700;text-transform:uppercase}
-        .stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
-        .stat-card{background:linear-gradient(135deg,var(--primary) 0%,var(--secondary) 100%);color:white;padding:15px;border-radius:12px;text-align:center}
-        .stat-value{font-size:24px;font-weight:700}
-        .stat-label{font-size:11px;opacity:0.9;margin-top:4px}
-        .kondisi-checkbox-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:5px}
-        .kondisi-checkbox{background:rgba(128,128,128,0.1);padding:8px 12px;border-radius:20px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s}
-        .kondisi-checkbox.active{background:var(--primary);color:white;border-color:var(--primary)}
-        .foto-preview{max-width:100%;max-height:120px;margin-top:8px;border-radius:8px;display:none}
-        .timeline{margin-top:15px;padding:12px;background:#f8f9fa;border-radius:12px;border-left:4px solid var(--primary)}
-        .timeline-title{font-size:12px;font-weight:bold;color:var(--primary);margin-bottom:8px}
-        .timeline-item{font-size:11px;color:#666;margin-bottom:6px;display:flex;align-items:baseline;gap:8px}
-        .timeline-badge{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0}
-        .timeline-time{font-family:monospace;font-size:10px;color:#999;min-width:110px}
-        .workflow-buttons{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
-        .btn-workflow{flex:1;padding:12px;border:none;border-radius:12px;font-weight:bold;cursor:pointer;background:#f0f0f0;color:#333;transition:all 0.3s}
-        .btn-workflow.diagnosa{background:#2196f3;color:white}
-        .btn-workflow.selesai{background:#00bcd4;color:white}
-        .btn-workflow.ambil{background:#4caf50;color:white}
-        .logo-preview{width:100px;height:100px;border:2px dashed #ccc;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;background:var(--card-bg)}
-        .loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:3000;backdrop-filter:blur(5px)}
-        .loading-overlay.show{display:flex}
-        .loading-spinner{width:50px;height:50px;border:4px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.8s linear infinite}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .db-status{position:fixed;bottom:10px;right:10px;width:10px;height:10px;border-radius:50%;background:var(--success);z-index:9999;box-shadow:0 0 0 2px white}
-        .error-input{border-color:#f44336!important;background-color:rgba(244,67,54,0.05)!important}
-        .validation-msg{color:#f44336;font-size:12px;margin-top:4px;display:none}
-        .validation-msg.show{display:block}
-        .warranty-text{font-size:11px;color:#2c7da0;font-weight:bold;margin-top:10px;text-align:center}
-        .color-preview{width:30px;height:30px;border-radius:50%;display:inline-block;vertical-align:middle;margin-left:10px;border:1px solid #ccc}
-        .thermal-preview-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:4000;visibility:hidden;opacity:0;transition:all 0.3s}
-        .thermal-preview-modal.active{visibility:visible;opacity:1}
-        .thermal-preview-content{background:white;width:90%;max-width:350px;max-height:80%;border-radius:20px;padding:20px;overflow:auto;font-family:'Courier New',monospace;font-size:12px;white-space:pre-wrap;word-break:break-word;color:black;box-shadow:0 10px 30px rgba(0,0,0,0.3)}
-        .close-modal{text-align:right;margin-bottom:10px}
-        .close-modal button{background:#f44336;color:white;border:none;border-radius:20px;padding:5px 12px;cursor:pointer}
-        @media print{.header,.workflow-info,.nota-type-selector,.form-card,.btn-primary,.btn-secondary,.action-grid,.workflow-buttons,.install-prompt{display:none!important}.preview-card{display:block!important;box-shadow:none;margin:0;padding:0}.nota-paper{margin:0;padding:10px;width:80mm;font-size:12px;box-shadow:none;page-break-inside:avoid}body{background:white;padding:0}}
-        @media (display-mode:standalone){.header{padding-top:40px}.install-prompt{display:none!important}}
+        /* Semua CSS asli tetap di sini (salin dari kode awal Anda) */
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        :root { 
+            --primary: #667eea; 
+            --secondary: #764ba2; 
+            --success: #4caf50; 
+            --warning: #ff9800; 
+            --danger: #f44336; 
+            --info: #00bcd4; 
+            --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            --card-bg: white; 
+            --text: #333; 
+            --border: #e4e4e4;
+            --slogan-color: #666;
+        }
+        body.dark-mode { 
+            --bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); 
+            --card-bg: #16213e; 
+            --text: #eaeaea; 
+            --border: #2a2a4a;
+            --slogan-color: #aaa;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); min-height: 100vh; padding: 15px; padding-bottom: 30px; color: var(--text); transition: all 0.3s ease; }
+        .container { max-width: 500px; margin: 0 auto; }
+        .header { text-align: center; padding: 20px 0; color: white; }
+        .header-icon { width: 70px; height: 70px; background: white; border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-size: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; }
+        .header-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .header h1 { font-size: 22px; margin-bottom: 5px; }
+        .header .slogan { font-size: 12px; opacity: 0.9; margin-top: 4px; }
+        .header-controls { display: flex; justify-content: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .btn-icon { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-size: 12px; backdrop-filter: blur(10px); transition: all 0.3s; }
+        .connection-status { position: fixed; top: 0; left: 0; right: 0; background: #f44336; color: white; text-align: center; padding: 5px; font-size: 12px; transform: translateY(-100%); transition: transform 0.3s; z-index: 9999; }
+        .connection-status.offline { transform: translateY(0); }
+        .workflow-info { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); border-radius: 15px; padding: 15px; margin-bottom: 20px; color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .workflow-steps { display: flex; justify-content: space-between; font-size: 11px; margin-top: 10px; }
+        .step { text-align: center; flex: 1; opacity: 0.6; transition: all 0.3s; }
+        .step.active { opacity: 1; font-weight: 700; transform: scale(1.1); }
+        .nota-type-selector { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 20px; }
+        .type-btn { padding: 15px 5px; border: 3px solid rgba(255,255,255,0.3); border-radius: 12px; background: rgba(255,255,255,0.1); color: white; cursor: pointer; text-align: center; backdrop-filter: blur(10px); transition: all 0.3s; }
+        .type-btn.active { background: white; color: var(--primary); border-color: white; transform: scale(1.05); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .type-btn .icon { font-size: 24px; margin-bottom: 5px; display: block; }
+        .type-btn .label { font-size: 11px; font-weight: 700; display: block; }
+        .form-card, .preview-card, .history-card, .settings-card { background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); margin-bottom: 20px; display: none; }
+        .form-card.active, .preview-card.active, .history-card.active, .settings-card.active { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .form-title { font-size: 18px; color: var(--text); margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; color: var(--text); font-weight: 600; font-size: 13px; text-transform: uppercase; }
+        input, textarea, select { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; font-size: 15px; background: var(--card-bg); color: var(--text); font-family: inherit; transition: all 0.3s; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        .input-with-button { display: flex; gap: 8px; }
+        .btn-import { padding: 0 16px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; border: none; border-radius: 12px; cursor: pointer; font-size: 20px; }
+        .checkbox-group { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(128,128,128,0.1); border-radius: 10px; border: 2px solid var(--border); cursor: pointer; margin-bottom: 8px; }
+        .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--primary); }
+        .status-option { padding: 12px; border: 2px solid var(--border); border-radius: 10px; text-align: center; cursor: pointer; background: var(--card-bg); transition: all 0.3s; }
+        .status-option.active { border-color: var(--primary); background: rgba(102, 126, 234, 0.1); color: var(--primary); font-weight: 700; }
+        .btn-primary { width: 100%; padding: 16px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: all 0.3s; }
+        .btn-secondary { width: 100%; padding: 14px; border: 2px solid var(--border); border-radius: 12px; background: var(--card-bg); color: #666; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .nota-paper { background: white; border-radius: 15px; padding: 25px; margin-bottom: 20px; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.1); color: #333; transition: padding 0.2s; overflow: hidden; width: 100%; font-size: 12px; }
+        .nota-paper .nota-header h2 { font-size: 18px; }
+        .nota-paper .nota-section-title { font-size: 13px; }
+        .nota-paper .nota-row { font-size: 12px; }
+        .nota-paper .nota-footer { font-size: 11px; color: #333; }
+        .nota-paper .syarat-section { font-size: 10px; }
+        .nota-paper::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.02) 0px, rgba(0,0,0,0.02) 2px, transparent 2px, transparent 8px); pointer-events: none; z-index: 0; }
+        .nota-paper::after { content: "SERVICE HP"; position: absolute; bottom: 20px; right: 20px; font-size: 40px; font-weight: bold; color: rgba(0,0,0,0.05); transform: rotate(-15deg); pointer-events: none; z-index: 0; white-space: pre; }
+        .nota-paper.terima { border: 3px solid var(--warning); background: linear-gradient(to bottom, #fff8e1 0%, #ffffff 100%); }
+        .nota-paper.diagnosa { border: 3px solid #2196f3; background: linear-gradient(to bottom, #e3f2fd 0%, #ffffff 100%); }
+        .nota-paper.selesai { border: 3px solid var(--info); background: linear-gradient(to bottom, #e0f7fa 0%, #ffffff 100%); }
+        .nota-paper.ambil { border: 3px solid var(--success); background: linear-gradient(to bottom, #e8f5e9 0%, #ffffff 100%); }
+        .nota-paper.batal { border: 3px solid var(--danger); background: linear-gradient(to bottom, #ffebee 0%, #ffffff 100%); }
+        .nota-paper.capture-padding { padding: 35px; }
+        .nota-header { text-align: center; border-bottom: 2px solid #dee2e6; padding-bottom: 15px; margin-bottom: 20px; position: relative; z-index: 1; }
+        .nota-logo { width: 60px; height: 60px; object-fit: contain; margin-bottom: 10px; border-radius: 10px; }
+        .nota-type-badge { display: inline-block; padding: 8px 20px; border-radius: 25px; font-size: 13px; font-weight: 800; color: white; margin-bottom: 10px; }
+        .badge-terima { background: var(--warning); }
+        .badge-diagnosa { background: #2196f3; }
+        .badge-selesai { background: var(--info); }
+        .badge-ambil { background: var(--success); }
+        .badge-batal { background: var(--danger); }
+        .nota-header h2 { color: #333; font-size: 20px; margin-bottom: 5px; }
+        .nota-slogan { font-size: 11px; color: var(--slogan-color); margin-top: 2px; font-style: italic; }
+        .nota-alamat, .nota-telp { font-size: 12px; color: #666; margin-bottom: 3px; }
+        .nota-id { background: #f8f9fa; padding: 8px 15px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 14px; margin-top: 10px; display: inline-block; border: 1px dashed #adb5bd; letter-spacing: 0.5px; }
+        .nota-section { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px dashed #dee2e6; position: relative; z-index: 1; }
+        .nota-section-title { font-size: 12px; color: #868e96; text-transform: uppercase; margin-bottom: 10px; font-weight: 700; }
+        .nota-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+        .nota-label { color: #666; font-weight: 500; }
+        .nota-value { color: #333; font-weight: 600; text-align: right; max-width: 60%; word-break: break-word; }
+        .nota-total { background: #f8f9fa; padding: 15px; border-radius: 10px; border: 2px solid #dee2e6; }
+        .nota-footer { margin-top: 25px; padding-top: 15px; border-top: 1px dashed #dee2e6; text-align: center; font-size: 11px; color: #333; }
+        .syarat-section { margin-top: 20px; padding: 10px; background: #f9f9f9; border-radius: 8px; font-size: 10px; color: #666; text-align: left; border-left: 3px solid var(--primary); }
+        .syarat-section strong { font-size: 11px; display: block; margin-bottom: 5px; color: var(--primary); }
+        .action-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .btn-action { padding: 12px; border: none; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: white; transition: all 0.3s; text-align: center; }
+        .btn-wa-text { background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); }
+        .btn-wa-img { background: linear-gradient(135deg, #128c7e 0%, #075e54 100%); }
+        .btn-bluetooth { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .btn-pdf { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); }
+        .btn-preview-thermal { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+        .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #333; color: white; padding: 12px 24px; border-radius: 25px; font-size: 14px; opacity: 0; transition: all 0.3s; z-index: 1000; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        .history-item { padding: 15px; border: 2px solid var(--border); border-radius: 12px; margin-bottom: 10px; cursor: pointer; background: var(--card-bg); transition: all 0.3s; }
+        .history-item:hover { transform: translateX(5px); border-color: var(--primary); }
+        .history-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .history-name { font-weight: 700; font-size: 15px; color: var(--text); }
+        .history-type { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: white; padding: 15px; border-radius: 12px; text-align: center; }
+        .kondisi-checkbox-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .kondisi-checkbox { background: rgba(128,128,128,0.1); padding: 8px 12px; border-radius: 20px; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+        .kondisi-checkbox.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .foto-preview { max-width: 100%; max-height: 120px; margin-top: 8px; border-radius: 8px; display: none; }
+        .timeline { margin-top: 15px; padding: 12px; background: #f8f9fa; border-radius: 12px; border-left: 4px solid var(--primary); }
+        .timeline-title { font-size: 12px; font-weight: bold; color: var(--primary); margin-bottom: 8px; }
+        .timeline-item { font-size: 11px; color: #666; margin-bottom: 6px; display: flex; align-items: baseline; gap: 8px; }
+        .timeline-badge { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+        .timeline-time { font-family: monospace; font-size: 10px; color: #999; }
+        .workflow-buttons { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .btn-workflow { flex: 1; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; background: #f0f0f0; color: #333; }
+        .btn-workflow.diagnosa { background: #2196f3; color: white; }
+        .btn-workflow.selesai { background: #00bcd4; color: white; }
+        .btn-workflow.ambil { background: #4caf50; color: white; }
+        .logo-preview { width: 100px; height: 100px; border: 2px dashed #ccc; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; overflow: hidden; background: var(--card-bg); }
+        .loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 3000; backdrop-filter: blur(5px); }
+        .loading-spinner { width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .db-status { position: fixed; bottom: 10px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--success); z-index: 9999; }
+        @media print { .header, .workflow-info, .nota-type-selector, .form-card, .btn-primary, .btn-secondary, .action-grid, .workflow-buttons, .install-prompt { display: none; } .preview-card { display: block; } .nota-paper { margin: 0; padding: 10px; width: 80mm; font-size: 12px; } }
+        .error-input { border-color: #f44336 !important; background-color: rgba(244,67,54,0.05) !important; }
+        .validation-msg { color: #f44336; font-size: 12px; margin-top: 4px; display: none; }
+        .validation-msg.show { display: block; }
+        .nota-paper.capture-wide { width: 400px; margin: 0 auto; }
+        @media (max-width: 500px) { .nota-paper.capture-wide { width: 100%; } }
+        .warranty-text { font-size: 11px; color: #2c7da0; font-weight: bold; margin-top: 10px; text-align: center; }
+        .color-preview { width: 30px; height: 30px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 10px; border: 1px solid #ccc; }
+        .thermal-preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 4000;
+            visibility: hidden;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+        .thermal-preview-modal.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .thermal-preview-content {
+            background: white;
+            width: 90%;
+            max-width: 350px;
+            max-height: 80%;
+            border-radius: 20px;
+            padding: 20px;
+            overflow: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: black;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .thermal-preview-content pre {
+            margin: 0;
+            font-family: inherit;
+            font-size: inherit;
+            white-space: pre-wrap;
+        }
+        .close-modal {
+            text-align: right;
+            margin-bottom: 10px;
+        }
+        .close-modal button {
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 5px 12px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <div class="connection-status" id="connectionStatus">⚠️ Mode Offline - Data tersimpan lokal</div>
-    <div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
-    <div class="db-status" id="dbStatus"></div>
-    
-    <div class="container">
-        <div class="header">
-            <div class="header-icon" id="headerIcon">📱</div>
-            <h1 id="tokoNameDisplay">Nota Service HP</h1>
-            <p>Sistem Manajemen Service Profesional</p>
-            <div class="header-controls">
-                <button class="btn-icon" onclick="app.showHistory()">📋 Riwayat</button>
-                <button class="btn-icon" onclick="app.showSettings()">⚙️ Pengaturan</button>
-                <button class="btn-icon" onclick="app.toggleDarkMode()">🌙 Mode</button>
-                <button class="btn-icon" onclick="app.shareApp()" id="shareBtn" style="display:none;">🔗 Share</button>
-            </div>
-        </div>
-
-        <div class="workflow-info">
-            <div style="font-size:13px;margin-bottom:5px">Alur Service (4 Tahap):</div>
-            <div class="workflow-steps">
-                <div class="step active" data-step="terima"><div>📥</div><div>Terima</div></div>
-                <div class="step" data-step="diagnosa"><div>🔍</div><div>Diagnosa</div></div>
-                <div class="step" data-step="selesai"><div>✅</div><div>Selesai</div></div>
-                <div class="step" data-step="ambil"><div>📤</div><div>Ambil</div></div>
-            </div>
-        </div>
-
-        <div class="nota-type-selector">
-            <div class="type-btn active" onclick="app.selectType('terima')" id="btnTerima"><span class="icon">📥</span><span class="label">NOTA<br>TERIMA</span></div>
-            <div class="type-btn" onclick="app.selectType('diagnosa')" id="btnDiagnosa"><span class="icon">🔍</span><span class="label">HASIL<br>DIAGNOSA</span></div>
-            <div class="type-btn" onclick="app.selectType('selesai')" id="btnSelesai"><span class="icon">✅</span><span class="label">NOTA<br>SELESAI</span></div>
-            <div class="type-btn" onclick="app.selectType('ambil')" id="btnAmbil"><span class="icon">📤</span><span class="label">NOTA<br>AMBIL</span></div>
-        </div>
-
-        <div class="form-card active" id="formCard">
-            <form id="notaForm" onsubmit="event.preventDefault();app.buatPreview()">
-                <div class="form-title"><span id="formTitle">📥 Nota Penerimaan HP</span></div>
-                
-                <div class="form-group">
-                    <label>Nama Pelanggan *</label>
-                    <div class="input-with-button">
-                        <input type="text" id="nama" required placeholder="Masukkan nama">
-                        <button type="button" class="btn-import" onclick="app.importContact()">📇</button>
-                    </div>
-                    <div class="validation-msg" id="namaError">Nama wajib diisi</div>
-                </div>
-
-                <div class="form-group">
-                    <label>No HP / WhatsApp *</label>
-                    <input type="tel" id="nohp" placeholder="08xxxxxxxxxx" required oninput="app.cleanPhoneInput(this)" onblur="app.validatePhone()">
-                    <div class="validation-msg" id="phoneValidation">Format tidak valid</div>
-                </div>
-
-                <div class="row">
-                    <div class="form-group">
-                        <label>Merek HP *</label>
-                        <input type="text" id="merek" list="listMerek" required placeholder="Samsung, iPhone, etc">
-                        <datalist id="listMerek"><option>Samsung</option><option>iPhone</option><option>Xiaomi</option><option>OPPO</option><option>Vivo</option><option>Realme</option></datalist>
-                        <div class="validation-msg" id="merekError">Merek wajib diisi</div>
-                    </div>
-                    <div class="form-group">
-                        <label>Model *</label>
-                        <input type="text" id="model" required placeholder="Contoh: Galaxy S21">
-                        <div class="validation-msg" id="modelError">Model wajib diisi</div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Keluhan/Kerusakan *</label>
-                    <textarea id="keluhan" rows="3" required placeholder="Deskripsikan kerusakan..."></textarea>
-                    <div class="validation-msg" id="keluhanError">Keluhan wajib diisi</div>
-                </div>
-
-                <div id="kelengkapanSection">
-                    <div class="form-group">
-                        <label>Kelengkapan</label>
-                        <label class="checkbox-group"><input type="checkbox" value="SIM Card"> SIM Card</label>
-                        <label class="checkbox-group"><input type="checkbox" value="Memory Card"> Memory Card</label>
-                        <label class="checkbox-group"><input type="checkbox" value="Casing"> Casing</label>
-                        <label class="checkbox-group"><input type="checkbox" value="Charger"> Charger</label>
-                        <label class="checkbox-group"><input type="checkbox" value="Box"> Box/Dus</label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Kondisi Fisik</label>
-                    <div class="kondisi-checkbox-group" id="kondisiCheckboxGroup">
-                        <div class="kondisi-checkbox" data-value="Penyok">Penyok</div>
-                        <div class="kondisi-checkbox" data-value="Lecet">Lecet</div>
-                        <div class="kondisi-checkbox" data-value="Retak">Retak</div>
-                        <div class="kondisi-checkbox" data-value="Basah">Basah</div>
-                        <div class="kondisi-checkbox" data-value="Matot">Matot</div>
-                    </div>
-                    <input type="text" id="kondisiLainnya" placeholder="Kondisi lainnya..." style="margin-top:8px">
-                    <div style="margin-top:10px">
-                        <label>Foto Device (max 2MB)</label>
-                        <input type="file" id="fotoDevice" accept="image/*" onchange="app.handleFotoDevice(this)">
-                        <div id="fotoPreview" class="foto-preview"></div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Password/Pola (opsional)</label>
-                    <input type="text" id="passwordDevice" placeholder="Untuk testing">
-                </div>
-
-                <div id="diagnosaSection" style="display:none">
-                    <div class="form-group">
-                        <label>Hasil Pemeriksaan *</label>
-                        <textarea id="hasilDiagnosa" rows="3" placeholder="Detail diagnosa..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Sparepart Diperlukan</label>
-                        <input type="text" id="sparepart" placeholder="LCD, Battery, etc">
-                    </div>
-                    <div class="form-group">
-                        <label>Status Perbaikan</label>
-                        <select id="statusDiagnosa">
-                            <option value="bisa">✅ BISA DIPERBAIKI</option>
-                            <option value="tidak">❌ TIDAK BISA</option>
-                            <option value="pending">⏳ MENUNGGU KONFIRMASI</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div id="selesaiSection" style="display:none">
-                    <div class="form-group">
-                        <label>Detail Perbaikan *</label>
-                        <textarea id="detailPerbaikan" rows="3" placeholder="Sparepart diganti..."></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Status Hasil</label>
-                        <select id="statusSelesai">
-                            <option value="normal">✅ BERFUNGSI NORMAL</option>
-                            <option value="partial">⚠️ BERFUNGSI SEBAGIAN</option>
-                            <option value="tidak">❌ TIDAK BISA</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Siap Diambil</label>
-                        <input type="datetime-local" id="siapAmbil">
-                    </div>
-                </div>
-
-                <div id="ambilSection" style="display:none">
-                    <div class="form-group">
-                        <label>Status Pengambilan</label>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                            <div class="status-option active" onclick="app.selectAmbilStatus('diambil')" id="statusDiambil">✅ DIAMBIL</div>
-                            <div class="status-option" onclick="app.selectAmbilStatus('batal')" id="statusBatal">❌ DIBATALKAN</div>
-                        </div>
-                    </div>
-                    <div id="alasanBatalGroup" style="display:none">
-                        <div class="form-group">
-                            <label>Alasan</label>
-                            <select id="alasanBatal">
-                                <option value="Tidak bisa diperbaiki">Tidak bisa diperbaiki</option>
-                                <option value="Biaya mahal">Biaya terlalu mahal</option>
-                                <option value="Sparepart tidak ada">Sparepart tidak tersedia</option>
-                                <option value="Pelanggan membatalkan">Pelanggan membatalkan</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row-3">
-                    <div class="form-group">
-                        <label>Total Biaya</label>
-                        <input type="number" id="totalBiaya" min="0" step="1000" placeholder="0" oninput="app.hitungSisa()">
-                    </div>
-                    <div class="form-group">
-                        <label>DP/Panjar</label>
-                        <input type="number" id="dp" min="0" step="1000" placeholder="0" oninput="app.hitungSisa()">
-                    </div>
-                    <div class="form-group">
-                        <label>Sisa</label>
-                        <input type="text" id="sisa" readonly style="background:#f0f0f0" placeholder="0">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Estimasi Waktu</label>
-                    <input type="text" id="estimasi" placeholder="1-2 hari">
-                </div>
-
-                <div class="form-group">
-                    <label>Catatan</label>
-                    <input type="text" id="catatan" placeholder="Garansi, ketentuan khusus...">
-                </div>
-
-                <div class="form-group">
-                    <label class="checkbox-group" style="margin:0"><input type="checkbox" id="printThermal"> Auto-print ke Bluetooth Printer</label>
-                </div>
-
-                <button type="submit" class="btn-primary">👁️ Lihat & Simpan Nota</button>
-                <button type="button" class="btn-secondary" onclick="app.resetForm()">🗑️ Reset Form</button>
-            </form>
-        </div>
-
-        <div class="preview-card" id="previewCard">
-            <div class="nota-paper" id="notaContent"></div>
-            <div style="background:#f5f5f5;padding:15px;border-radius:12px;margin-bottom:15px">
-                <div style="font-weight:600;margin-bottom:10px">🖨️ Opsi Cetak & Kirim:</div>
-                <div class="action-grid">
-                    <button class="btn-action btn-wa-text" onclick="app.kirimWA('teks')">💬<br>WA Teks</button>
-                    <button class="btn-action btn-wa-img" onclick="app.kirimWA('gambar')">📷<br>WA Gambar</button>
-                    <button class="btn-action btn-bluetooth" onclick="app.printBluetooth()">🖨️<br>Bluetooth</button>
-                    <button class="btn-action btn-pdf" onclick="app.generatePDF()">📄<br>PDF</button>
-                    <button class="btn-action btn-preview-thermal" onclick="app.previewThermal()">🔍<br>Preview</button>
-                    <button class="btn-action" onclick="app.shareNota()" style="background:linear-gradient(135deg,#1da1f2 0%,#0d8ecf 100%)">🔗<br>Share</button>
-                </div>
-                <button class="btn-secondary" onclick="window.print()">🖨️ Cetak ke Printer</button>
-            </div>
-            <div class="workflow-buttons" id="workflowButtons"></div>
-            <button class="btn-secondary" onclick="app.buatNotaBaru()">🔄 Buat Nota Baru</button>
-            <button class="btn-secondary" onclick="app.backToForm()">← Kembali Edit</button>
-        </div>
-
-        <div class="history-card" id="historyCard">
-            <div class="form-title">📋 Riwayat Service <button class="btn-icon" onclick="app.backToForm()" style="background:#f0f0f0;color:#333">✕</button></div>
-            <div class="stats-grid">
-                <div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Nota</div></div>
-                <div class="stat-card"><div class="stat-value" id="statBulanIni">0</div><div class="stat-label">Bulan Ini</div></div>
-                <div class="stat-card"><div class="stat-value" id="statSelesai">0</div><div class="stat-label">Selesai</div></div>
-                <div class="stat-card"><div class="stat-value" id="statPending">0</div><div class="stat-label">Pending</div></div>
-            </div>
-            <div style="margin-bottom:15px">
-                <input type="text" id="searchHistory" placeholder="🔍 Cari..." oninput="app.renderHistory()" style="margin-bottom:10px">
-                <select id="filterType" onchange="app.renderHistory()">
-                    <option value="">Semua Status</option>
-                    <option value="terima">📥 Terima</option>
-                    <option value="diagnosa">🔍 Diagnosa</option>
-                    <option value="selesai">✅ Selesai</option>
-                    <option value="ambil">📤 Ambil</option>
-                </select>
-            </div>
-            <div id="historyList" style="max-height:400px;overflow-y:auto"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
-                <button class="btn-secondary" onclick="app.exportCSV()">📊 Export CSV</button>
-                <button class="btn-secondary" onclick="app.exportJSON()">💾 Backup</button>
-            </div>
-        </div>
-
-        <div class="settings-card" id="settingsCard">
-            <div class="form-title">⚙️ Pengaturan <button class="btn-icon" onclick="app.backToForm()" style="background:#f0f0f0;color:#333">✕</button></div>
-            
-            <div class="form-group"><label>Nama Toko</label><input type="text" id="settingNamaToko" placeholder="Nama bisnis"></div>
-            <div class="form-group"><label>Slogan</label><input type="text" id="settingSlogan" placeholder="Service Cepat & Bergaransi"></div>
-            <div class="form-group">
-                <label>Warna Utama</label>
-                <div style="display:flex;align-items:center">
-                    <input type="color" id="settingPrimaryColor" value="#667eea" style="width:60px;height:40px;padding:2px">
-                    <span class="color-preview" id="primaryColorPreview" style="background:#667eea"></span>
-                </div>
-            </div>
-            <div class="form-group"><label>Alamat</label><input type="text" id="settingAlamat" placeholder="Alamat toko"></div>
-            <div class="form-group"><label>No Telepon</label><input type="tel" id="settingTelepon" placeholder="Nomor kontak"></div>
-            
-            <div class="form-group">
-                <label>Logo (max 500KB)</label>
-                <div class="logo-preview" id="logoPreview"><span style="color:#999;font-size:12px">Belum ada logo</span></div>
-                <input type="file" id="logoInput" accept="image/*" onchange="app.handleLogo(event)">
-                <button onclick="app.removeLogo()" class="btn-secondary" style="margin-top:8px;font-size:12px">🗑️ Hapus Logo</button>
-            </div>
-
-            <div class="form-group">
-                <label>Ukuran Printer</label>
-                <select id="printerSize"><option value="58">58mm</option><option value="75">75mm</option><option value="80">80mm</option></select>
-            </div>
-
-            <div class="form-group">
-                <label>Auto WhatsApp</label>
-                <label class="checkbox-group"><input type="checkbox" id="autoWASelesai"> Kirim WA saat selesai</label>
-                <label class="checkbox-group"><input type="checkbox" id="autoWAAmbil"> Kirim WA saat siap diambil</label>
-                <textarea id="waNotifTemplate" rows="3" placeholder="Template notifikasi..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Footer Nota</label>
-                <label class="checkbox-group" style="margin-bottom:5px"><input type="checkbox" id="footerTerimaEnabled"> Footer Terima</label>
-                <textarea id="footerTerimaText" rows="2" placeholder="Footer nota terima" style="margin-bottom:10px"></textarea>
-                
-                <label class="checkbox-group" style="margin-bottom:5px"><input type="checkbox" id="footerDiagnosaEnabled"> Footer Diagnosa</label>
-                <textarea id="footerDiagnosaText" rows="2" placeholder="Footer nota diagnosa" style="margin-bottom:10px"></textarea>
-                
-                <label class="checkbox-group" style="margin-bottom:5px"><input type="checkbox" id="footerSelesaiEnabled"> Footer Selesai</label>
-                <textarea id="footerSelesaiText" rows="2" placeholder="Footer nota selesai" style="margin-bottom:10px"></textarea>
-                
-                <label class="checkbox-group" style="margin-bottom:5px"><input type="checkbox" id="footerAmbilEnabled"> Footer Ambil</label>
-                <textarea id="footerAmbilText" rows="2" placeholder="Footer nota ambil"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Syarat & Ketentuan</label>
-                <textarea id="skText" rows="4" placeholder="S&K service..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Backup & Restore</label>
-                <button class="btn-secondary" onclick="app.exportJSON()" style="margin-bottom:8px">📥 Download Backup</button>
-                <div style="position:relative">
-                    <input type="file" id="restoreInput" accept=".json" onchange="app.restoreData(event)" style="position:absolute;opacity:0;width:100%;height:100%;cursor:pointer">
-                    <button class="btn-secondary" style="width:100%">📤 Restore Data</button>
-                </div>
-                <button class="btn-secondary" onclick="app.clearAllData()" style="color:#c62828;border-color:#c62828;margin-top:8px">⚠️ Hapus Semua Data</button>
-            </div>
-
-            <button class="btn-primary" onclick="app.saveSettings()">💾 Simpan Pengaturan</button>
-            <button class="btn-secondary" onclick="app.backToForm()">← Kembali</button>
+<div class="connection-status" id="connectionStatus">⚠️ Mode Offline - Data tersimpan lokal</div>
+<div class="loading-overlay" id="loadingOverlay"><div class="loading-spinner"></div></div>
+<div class="db-status" id="dbStatus"></div>
+<div class="container">
+    <div class="header">
+        <div class="header-icon" id="headerIcon">📱</div>
+        <h1 id="tokoNameDisplay">Nota Service HP</h1>
+        <div class="slogan" id="tokoSloganDisplay"></div>
+        <p>Sistem Manajemen Service Profesional</p>
+        <div class="header-controls">
+            <button class="btn-icon" onclick="app.showHistory()">📋 Riwayat</button>
+            <button class="btn-icon" onclick="app.showSettings()">⚙️ Pengaturan</button>
+            <button class="btn-icon" onclick="app.toggleDarkMode()">🌙 Mode</button>
         </div>
     </div>
+    <div class="workflow-info">
+        <div style="font-size:13px; margin-bottom:5px;">Alur Service (4 Tahap):</div>
+        <div class="workflow-steps">
+            <div class="step active" data-step="terima"><div>📥</div><div>Terima</div></div>
+            <div class="step" data-step="diagnosa"><div>🔍</div><div>Diagnosa</div></div>
+            <div class="step" data-step="selesai"><div>✅</div><div>Selesai</div></div>
+            <div class="step" data-step="ambil"><div>📤</div><div>Ambil</div></div>
+        </div>
+    </div>
+    <div class="nota-type-selector">
+        <div class="type-btn active" onclick="app.selectType('terima')" id="btnTerima"><span class="icon">📥</span><span class="label">NOTA<br>TERIMA</span></div>
+        <div class="type-btn" onclick="app.selectType('diagnosa')" id="btnDiagnosa"><span class="icon">🔍</span><span class="label">HASIL<br>DIAGNOSA</span></div>
+        <div class="type-btn" onclick="app.selectType('selesai')" id="btnSelesai"><span class="icon">✅</span><span class="label">NOTA<br>SELESAI</span></div>
+        <div class="type-btn" onclick="app.selectType('ambil')" id="btnAmbil"><span class="icon">📤</span><span class="label">NOTA<br>AMBIL</span></div>
+    </div>
 
-    <div class="toast" id="toast"></div>
-
-    <div id="installPrompt" class="install-prompt">
-        <div class="install-content">
-            <div class="install-icon">📱</div>
-            <div class="install-text">
-                <strong>Install Nota Service HP</strong>
-                <small>Tambahkan ke home screen untuk akses cepat</small>
+    <!-- FORM CARD -->
+    <div class="form-card active" id="formCard">
+        <form id="notaForm" onsubmit="event.preventDefault(); app.buatPreview();">
+            <div class="form-title"><span id="formTitle">📥 Nota Penerimaan HP</span></div>
+            <div class="form-group">
+                <label>Nama Pelanggan *</label>
+                <div class="input-with-button"><input type="text" id="nama" required><button type="button" class="btn-import" onclick="app.importContact()">📇</button></div>
+                <div class="validation-msg" id="namaError"></div>
             </div>
-            <button class="btn-install" onclick="app.installPWA()">Install</button>
-            <button class="btn-close-install" onclick="app.dismissInstall()">✕</button>
-        </div>
+            <div class="form-group">
+                <label>Nomor HP / WhatsApp *</label>
+                <input type="tel" id="nohp" placeholder="08xxxxxxxxxx" required oninput="app.cleanPhoneInput(this)" onblur="app.validatePhone()">
+                <div class="validation-msg" id="phoneValidation">Format nomor tidak valid.</div>
+            </div>
+            <div class="row">
+                <div class="form-group"><label>Merek HP *</label><input type="text" id="merek" list="listMerek" required><datalist id="listMerek"><option>Samsung</option><option>iPhone</option><option>Xiaomi</option><option>OPPO</option><option>Vivo</option></datalist><div class="validation-msg" id="merekError"></div></div>
+                <div class="form-group"><label>Model *</label><input type="text" id="model" required><div class="validation-msg" id="modelError"></div></div>
+            </div>
+            <div class="form-group"><label>Keluhan/Kerusakan *</label><textarea id="keluhan" rows="3" required></textarea><div class="validation-msg" id="keluhanError"></div></div>
+            <div id="kelengkapanSection"><div class="form-group"><label>Kelengkapan yang Diserahkan</label><label class="checkbox-group"><input type="checkbox" value="SIM Card"> SIM Card</label><label class="checkbox-group"><input type="checkbox" value="Memory Card"> Memory Card</label><label class="checkbox-group"><input type="checkbox" value="Casing"> Casing</label><label class="checkbox-group"><input type="checkbox" value="Charger"> Charger</label><label class="checkbox-group"><input type="checkbox" value="Box"> Box/Dus</label></div></div>
+            <div class="form-group"><label>Kondisi Fisik Device</label><div class="kondisi-checkbox-group" id="kondisiCheckboxGroup"><div class="kondisi-checkbox" data-value="Penyok">Penyok</div><div class="kondisi-checkbox" data-value="Lecet">Lecet</div><div class="kondisi-checkbox" data-value="Retak">Retak</div><div class="kondisi-checkbox" data-value="Basah">Basah</div><div class="kondisi-checkbox" data-value="Lainnya">Lainnya</div></div><input type="text" id="kondisiLainnya" placeholder="Jika lainnya, sebutkan"><div style="margin-top:10px;"><label>Foto Device (opsional)</label><input type="file" id="fotoDevice" accept="image/*" onchange="app.handleFotoDevice(this)"><div id="fotoPreview" class="foto-preview"></div></div></div>
+            <div class="form-group"><label>Password / Pola Device</label><input type="text" id="passwordDevice"></div>
+            <div id="diagnosaSection" style="display:none;"><div class="form-group"><label>Hasil Pemeriksaan *</label><textarea id="hasilDiagnosa" rows="3"></textarea></div><div class="form-group"><label>Sparepart Diperlukan</label><input type="text" id="sparepart"></div><div class="form-group"><label>Status Perbaikan</label><select id="statusDiagnosa"><option value="bisa">✅ BISA DIPERBAIKI</option><option value="tidak">❌ TIDAK BISA</option><option value="pending">⏳ MENUNGGU KONFIRMASI</option></select></div></div>
+            <div id="selesaiSection" style="display:none;"><div class="form-group"><label>Detail Perbaikan *</label><textarea id="detailPerbaikan" rows="3"></textarea></div><div class="form-group"><label>Status Hasil</label><select id="statusSelesai"><option value="normal">✅ BERFUNGSI NORMAL</option><option value="partial">⚠️ BERFUNGSI SEBAGIAN</option><option value="tidak">❌ TIDAK BISA</option></select></div><div class="form-group"><label>Siap Diambil</label><input type="text" id="siapAmbil"></div></div>
+            <div id="ambilSection" style="display:none;"><div class="form-group"><label>Status Pengambilan</label><div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="status-option active" onclick="app.selectAmbilStatus('diambil')" id="statusDiambil">✅ DIAMBIL</div><div class="status-option" onclick="app.selectAmbilStatus('batal')" id="statusBatal">❌ DIBATALKAN</div></div></div><div id="alasanBatalGroup" style="display:none;"><div class="form-group"><label>Alasan</label><select id="alasanBatal"><option value="Tidak bisa diperbaiki">Tidak bisa diperbaiki</option><option value="Biaya mahal">Biaya mahal</option><option value="Sparepart tidak ada">Sparepart tidak ada</option><option value="Pelanggan membatalkan">Pelanggan membatalkan</option></select></div></div></div>
+            <div class="row-3">
+                <div class="form-group"><label>Total Biaya (Rp)</label><input type="number" id="totalBiaya" min="0" step="1000" oninput="app.hitungSisa()"></div>
+                <div class="form-group"><label>DP / Panjar (Rp)</label><input type="number" id="dp" min="0" step="1000" oninput="app.hitungSisa()"></div>
+                <div class="form-group"><label>Sisa (Rp)</label><input type="text" id="sisa" readonly style="background:#f0f0f0;"></div>
+            </div>
+            <div class="form-group"><label>Estimasi Waktu</label><input type="text" id="estimasi" placeholder="1-2 hari"></div>
+            <div class="form-group"><label>Catatan Tambahan</label><input type="text" id="catatan"></div>
+            <div class="form-group"><label><input type="checkbox" id="printThermal"> Auto-print ke Bluetooth Printer setelah simpan</label></div>
+            <button type="submit" class="btn-primary">👁️ Lihat & Simpan Nota</button>
+            <button type="button" class="btn-secondary" onclick="app.resetForm()">🗑️ Reset Form</button>
+        </form>
     </div>
 
-    <div id="thermalPreviewModal" class="thermal-preview-modal">
-        <div class="thermal-preview-content">
-            <div class="close-modal"><button onclick="app.closeThermalPreview()">Tutup ✕</button></div>
-            <pre id="thermalPreviewText"></pre>
-        </div>
+    <!-- PREVIEW CARD -->
+    <div class="preview-card" id="previewCard">
+        <div class="nota-paper" id="notaContent"></div>
+        <div style="background:#f5f5f5; padding:15px; border-radius:12px; margin-bottom:15px;"><div style="font-weight:600; margin-bottom:10px;">🖨️ Opsi Cetak & Kirim:</div><div class="action-grid"><button class="btn-action btn-wa-text" onclick="app.kirimWA('teks')">💬<br>WA Teks</button><button class="btn-action btn-wa-img" onclick="app.kirimWA('gambar')">📷<br>WA Gambar</button><button class="btn-action btn-bluetooth" onclick="app.printBluetooth()">🖨️<br>Bluetooth</button><button class="btn-action btn-pdf" onclick="app.generatePDF()">📄<br>PDF</button><button class="btn-action btn-preview-thermal" onclick="app.previewThermal()">🔍<br>Preview Thermal</button></div><button class="btn-secondary" onclick="window.print()">Cetak ke Printer Biasa</button></div>
+        <div class="workflow-buttons" id="workflowButtons"></div>
+        <button class="btn-secondary" onclick="app.buatNotaBaru()">🔄 Buat Nota Baru</button>
+        <button class="btn-secondary" onclick="app.backToForm()">← Kembali Edit</button>
     </div>
 
-    <script>
-    const app=(function(){
-        let db,currentType='terima',currentStatus='diambil',currentNota=null,tokoSettings={},historyData=[],logoData=null,fotoDeviceData=null,footers={terima:{text:'',enabled:false},diagnosa:{text:'',enabled:false},selesai:{text:'',enabled:false},ambil:{text:'',enabled:false}},skText="",autoWASelesai=false,autoWAAmbil=false,waNotifTemplate="",deferredPrompt=null,isStandalone=false;
-        const BASE_PATH='/nota-service-pwa';
-        
-        function e(s){return document.getElementById(s)}
-        function showToast(m,d=3000){const t=e('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),d)}
-        function showLoading(){e('loadingOverlay').classList.add('show')}
-        function hideLoading(){e('loadingOverlay').classList.remove('show')}
-        function formatRupiah(n){return parseInt(n||0).toLocaleString('id-ID')}
-        function escapeHtml(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
-        
-        function initDB(){return new Promise((res,rej)=>{const r=indexedDB.open('NotaServiceDB',8);r.onerror=(e)=>rej(e.target.error);r.onsuccess=(e)=>{db=e.target.result;res(db)};r.onupgradeneeded=(e)=>{const d=e.target.result;if(!d.objectStoreNames.contains('nota')){const s=d.createObjectStore('nota',{keyPath:'id'});s.createIndex('timestamp','timestamp',{unique:false});s.createIndex('type','type',{unique:false})}}})}
-        async function saveToDB(d){if(!db)await initDB();return new Promise((res,rej)=>{const t=db.transaction(['nota'],'readwrite'),s=t.objectStore('nota'),r=s.put(d);r.onsuccess=res;r.onerror=rej})}
-        async function getAllFromDB(){if(!db)await initDB();return new Promise((res,rej)=>{const t=db.transaction(['nota'],'readonly'),s=t.objectStore('nota'),r=s.getAll();r.onsuccess=()=>res(r.result);r.onerror=rej})}
-        
-        function initPWA(){
-            if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js').then(r=>{console.log('SW registered');r.addEventListener('updatefound',()=>{const w=r.installing;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller){e('updatePrompt')?.classList.add('show')}})})}).catch(err=>console.log('SW failed',err))}
-            window.addEventListener('beforeinstallprompt',(ev)=>{ev.preventDefault();deferredPrompt=ev;if(!isStandalone&&!localStorage.getItem('pwa_dismissed'))setTimeout(()=>e('installPrompt')?.classList.add('show'),3000)});
-            window.addEventListener('appinstalled',()=>{isStandalone=true;e('installPrompt')?.classList.remove('show');showToast('✅ Aplikasi terinstall!');document.body.classList.add('standalone-mode')});
-            window.addEventListener('online',()=>{e('connectionStatus').classList.remove('offline');showToast('🌐 Online')});
-            window.addEventListener('offline',()=>{e('connectionStatus').classList.add('offline');showToast('⚠️ Mode offline')});
-            isStandalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone||document.referrer.includes('android-app://');
-            if(isStandalone)document.body.classList.add('standalone-mode');
-            if(navigator.share)e('shareBtn').style.display='flex';
+    <!-- HISTORY CARD -->
+    <div class="history-card" id="historyCard">
+        <div class="form-title">📋 Riwayat Service <button class="btn-icon" onclick="app.backToForm()" style="background:#f0f0f0;">✕</button></div>
+        <div class="stats-grid"><div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Nota</div></div><div class="stat-card"><div class="stat-value" id="statBulanIni">0</div><div class="stat-label">Bulan Ini</div></div><div class="stat-card"><div class="stat-value" id="statSelesai">0</div><div class="stat-label">Selesai</div></div><div class="stat-card"><div class="stat-value" id="statPending">0</div><div class="stat-label">Pending</div></div></div>
+        <div><input type="text" id="searchHistory" placeholder="Cari nama, no hp, atau device..." oninput="app.renderHistory()" style="margin-bottom:10px;"><select id="filterType" onchange="app.renderHistory()"><option value="">Semua Status</option><option value="terima">Terima</option><option value="diagnosa">Diagnosa</option><option value="selesai">Selesai</option><option value="ambil">Ambil</option></select></div>
+        <div id="historyList" style="max-height:400px; overflow-y:auto;"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;"><button class="btn-secondary" onclick="app.exportCSV()">📊 Export CSV</button><button class="btn-secondary" onclick="app.exportJSON()">💾 Backup Data</button></div>
+    </div>
+
+    <!-- SETTINGS CARD -->
+    <div class="settings-card" id="settingsCard">
+        <div class="form-title">⚙️ Pengaturan Toko <button class="btn-icon" onclick="app.backToForm()" style="background:#f0f0f0;">✕</button></div>
+        <div><label>Nama Toko</label><input type="text" id="settingNamaToko"></div>
+        <div><label>Slogan Toko</label><input type="text" id="settingSlogan" placeholder="Misal: Service Cepat & Bergaransi"></div>
+        <div><label>Warna Utama</label><div><input type="color" id="settingPrimaryColor" value="#667eea"><span class="color-preview" id="primaryColorPreview" style="background:#667eea;"></span></div></div>
+        <div><label>Alamat</label><input type="text" id="settingAlamat"></div>
+        <div><label>No. Telepon Toko</label><input type="tel" id="settingTelepon"></div>
+        <div><label>Logo Toko (Max 500KB)</label><div class="logo-preview" id="logoPreview"><span>Belum ada logo</span></div><input type="file" id="logoInput" accept="image/*" onchange="app.handleLogo(event)"><button onclick="app.removeLogo()" style="margin-top:8px;">🗑️ Hapus Logo</button></div>
+        <div><label>Ukuran Printer Thermal</label><select id="printerSize"><option value="58">58 mm</option><option value="75">75 mm</option><option value="80">80 mm</option></select></div>
+        <div><label>Auto Follow-up WhatsApp</label><label class="checkbox-group"><input type="checkbox" id="autoWASelesai"> Kirim WA notifikasi saat service selesai</label><label class="checkbox-group"><input type="checkbox" id="autoWAAmbil"> Kirim WA notifikasi saat diambil</label><textarea id="waNotifTemplate" rows="4" placeholder="Template notifikasi WA (gunakan {nama}, {device}, {nota_id}, {toko}, {status})"></textarea></div>
+        <div><label>Footer per Tipe Nota</label><div><label><input type="checkbox" id="footerTerimaEnabled"> 📥 Terima</label><textarea id="footerTerimaText" rows="2" placeholder="Footer untuk nota terima"></textarea></div><div><label><input type="checkbox" id="footerDiagnosaEnabled"> 🔍 Diagnosa</label><textarea id="footerDiagnosaText" rows="2"></textarea></div><div><label><input type="checkbox" id="footerSelesaiEnabled"> ✅ Selesai</label><textarea id="footerSelesaiText" rows="2"></textarea></div><div><label><input type="checkbox" id="footerAmbilEnabled"> 📤 Ambil/Batal</label><textarea id="footerAmbilText" rows="2"></textarea></div></div>
+        <div><label>Template WhatsApp (Teks Nota)</label><textarea id="templateText" rows="4" placeholder="Gunakan {nama}, {device}, {nota_id}, {biaya}, {status}, {tanggal}, {toko}, {footer}"></textarea></div>
+        <div><label>Syarat & Ketentuan</label><textarea id="skText" rows="5" placeholder="• Resiko kehilangan data bukan tanggung jawab kami.\n• Barang tidak diambil dalam 30 hari dianggap hangus.\n• Garansi hanya berlaku pada sparepart yang diganti."></textarea></div>
+        <div><label>Backup & Restore</label><button class="btn-secondary" onclick="app.backupData()">📥 Backup JSON</button><div class="file-input-wrapper"><input type="file" id="restoreInput" accept=".json" onchange="app.restoreData(event)" style="display:none;"><label for="restoreInput" class="btn-secondary" style="display:block; text-align:center;">📤 Restore</label></div><button class="btn-secondary" onclick="app.clearAllData()" style="color:#c62828;">⚠️ Hapus Semua Data</button></div>
+        <button class="btn-primary" onclick="app.saveSettings()">💾 Simpan Pengaturan</button>
+        <button class="btn-secondary" onclick="app.backToForm()">← Kembali</button>
+    </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- Modal Preview Thermal -->
+<div id="thermalPreviewModal" class="thermal-preview-modal">
+    <div class="thermal-preview-content">
+        <div class="close-modal"><button onclick="app.closeThermalPreview()">Tutup</button></div>
+        <pre id="thermalPreviewText"></pre>
+    </div>
+</div>
+
+<script>
+// ====================== Aplikasi dengan Preview Cetak Thermal & Dukungan 75mm ======================
+const app = (function() {
+    let db;
+    let currentType = 'terima';
+    let currentStatus = 'diambil';
+    let currentNota = null;
+    let tokoSettings = {};
+    let historyData = [];
+    let logoData = null;
+    let fotoDeviceData = null;
+    let footers = { terima:{text:'',enabled:false}, diagnosa:{text:'',enabled:false}, selesai:{text:'',enabled:false}, ambil:{text:'',enabled:false} };
+    let skText = "";
+    let autoWASelesai = false;
+    let autoWAAmbil = false;
+    let waNotifTemplate = "";
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    function showToast(msg) {
+        let t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function showLoading() { document.getElementById('loadingOverlay').classList.add('show'); }
+    function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+    function formatRupiah(num) { return parseInt(num||0).toLocaleString('id-ID'); }
+
+    function cleanPhoneInput(el) {
+        let v = el.value.replace(/\D/g,'');
+        if (v.startsWith('62')) v = '0'+v.substring(2);
+        if (v.startsWith('+62')) v = '0'+v.substring(3);
+        el.value = v;
+        return v;
+    }
+
+    function validatePhone() {
+        let inp = document.getElementById('nohp');
+        let v = inp.value;
+        let valid = /^08[1-9]\d{6,10}$/.test(v);
+        inp.classList.toggle('error-input', !valid);
+        document.getElementById('phoneValidation').classList.toggle('show', !valid && v !== '');
+        return valid;
+    }
+
+    function hitungSisa() {
+        let total = parseFloat(document.getElementById('totalBiaya').value)||0;
+        let dp = parseFloat(document.getElementById('dp').value)||0;
+        let sisa = total - dp;
+        document.getElementById('sisa').value = sisa > 0 ? sisa.toLocaleString('id-ID') : '0';
+    }
+
+    function initDB() {
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open('NotaServiceDB', 7);
+            request.onerror = (e) => reject(e.target.error);
+            request.onsuccess = (e) => {
+                db = e.target.result;
+                resolve(db);
+            };
+            request.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('nota')) {
+                    db.createObjectStore('nota', { keyPath: 'id' });
+                }
+            };
+        });
+    }
+
+    async function saveToDB(data) {
+        if (!db) await initDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(['nota'], 'readwrite');
+            const store = tx.objectStore('nota');
+            const req = store.put(data);
+            req.onsuccess = resolve;
+            req.onerror = reject;
+        });
+    }
+
+    async function getAllFromDB() {
+        if (!db) await initDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(['nota'], 'readonly');
+            const store = tx.objectStore('nota');
+            const req = store.getAll();
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = reject;
+        });
+    }
+
+    async function saveToHistory(nota) {
+        try {
+            await saveToDB(nota);
+            const existingIndex = historyData.findIndex(h => h.id === nota.id);
+            if (existingIndex !== -1) historyData[existingIndex] = nota;
+            else historyData.unshift(nota);
+        } catch (err) { console.error(err); showToast('Gagal menyimpan nota!'); }
+    }
+
+    async function loadHistory() {
+        try {
+            const data = await getAllFromDB();
+            historyData = data.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+        } catch (err) { historyData = []; }
+    }
+
+    function validateForm() {
+        let valid = true;
+        const nama = document.getElementById('nama').value.trim();
+        const nohp = document.getElementById('nohp').value.trim();
+        const merek = document.getElementById('merek').value.trim();
+        const model = document.getElementById('model').value.trim();
+        const keluhan = document.getElementById('keluhan').value.trim();
+        if (!nama) { document.getElementById('namaError').classList.add('show'); valid = false; } else { document.getElementById('namaError').classList.remove('show'); }
+        if (!validatePhone()) valid = false;
+        if (!merek) { document.getElementById('merekError').classList.add('show'); valid = false; } else { document.getElementById('merekError').classList.remove('show'); }
+        if (!model) { document.getElementById('modelError').classList.add('show'); valid = false; } else { document.getElementById('modelError').classList.remove('show'); }
+        if (!keluhan) { document.getElementById('keluhanError').classList.add('show'); valid = false; } else { document.getElementById('keluhanError').classList.remove('show'); }
+        return valid;
+    }
+
+    function getWarrantyText(nota) {
+        if (nota.type !== 'selesai' && nota.type !== 'ambil') return '';
+        let selesaiTimestamp = null;
+        if (nota.timeline) {
+            const selesaiEvent = nota.timeline.find(t => t.status === 'selesai');
+            if (selesaiEvent) selesaiTimestamp = new Date(selesaiEvent.timestamp);
         }
-        
-        async function saveToHistory(n){try{await saveToDB(n);const i=historyData.findIndex(h=>h.id===n.id);if(i!==-1)historyData[i]=n;else historyData.unshift(n)}catch(err){showToast('Gagal menyimpan')}}
-        async function loadHistory(){try{const d=await getAllFromDB();historyData=d.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp))}catch(err){historyData=[]}}
-        
-        function validateForm(){
-            let v=true;
-            const fields=['nama','nohp','merek','model','keluhan'];
-            const errors={nama:'namaError',merek:'merekError',model:'modelError',keluhan:'keluhanError'};
-            fields.forEach(f=>{const el=e(f),val=el.value.trim();if(f==='nohp'){if(!/^08[1-9]\d{6,11}$/.test(val)){e('phoneValidation').classList.add('show');el.classList.add('error-input');v=false}else{e('phoneValidation').classList.remove('show');el.classList.remove('error-input')}}else if(!val){e(errors[f])?.classList.add('show');el.classList.add('error-input');v=false}else{e(errors[f])?.classList.remove('show');el.classList.remove('error-input')}});
-            return v;
+        if (!selesaiTimestamp && nota.timestamp) selesaiTimestamp = new Date(nota.timestamp);
+        if (!selesaiTimestamp) return '';
+        const expiry = new Date(selesaiTimestamp);
+        expiry.setDate(expiry.getDate() + 30);
+        return `✅ Garansi sparepart 30 hari (s.d. ${expiry.toLocaleDateString('id-ID')})`;
+    }
+
+    async function sendAutoWA(nota, statusType) {
+        if (!nota.nohp) return;
+        let template = waNotifTemplate;
+        if (!template) template = "Halo {nama}, perangkat {device} Anda sudah *{status}*. Silakan ambil di toko kami. Terima kasih 🙏\n\n{nota_id}";
+        let statusText = statusType === 'selesai' ? 'SELESAI diperbaiki' : 'SIAP DIAMBIL';
+        let msg = template.replace(/{nama}/g, nota.nama)
+            .replace(/{device}/g, nota.device)
+            .replace(/{nota_id}/g, nota.notaId)
+            .replace(/{toko}/g, tokoSettings.nama || 'Service HP')
+            .replace(/{status}/g, statusText);
+        let no = nota.nohp.replace(/^0/, '62');
+        window.open(`https://wa.me/${no}?text=${encodeURIComponent(msg)}`, '_blank');
+        showToast(`Notifikasi WA dikirim ke ${nota.nama}`);
+    }
+
+    async function buatPreview() {
+        if (!validateForm()) { showToast('Harap lengkapi data wajib!'); return; }
+        showLoading();
+        try {
+            const device = `${document.getElementById('merek').value} ${document.getElementById('model').value}`.trim();
+            const now = new Date();
+            const notaId = 'SRV-'+Date.now().toString().slice(-6);
+            const originalId = window._lanjutOriginalId || notaId;
+            let timeline = [];
+            if (window._lanjutOriginalId) {
+                const prevNota = historyData.find(h => h.id === window._lanjutOriginalId);
+                if (prevNota && prevNota.timeline) timeline = [...prevNota.timeline];
+            }
+            timeline.push({ status: currentType, timestamp: now.toISOString(), waktu: now.toLocaleString('id-ID') });
+            const totalBiaya = parseFloat(document.getElementById('totalBiaya').value)||0;
+            const dp = parseFloat(document.getElementById('dp').value)||0;
+            const sisa = totalBiaya - dp;
+            currentNota = {
+                id: notaId, type: currentType, notaId: notaId, originalId: originalId,
+                nama: escapeHtml(document.getElementById('nama').value.trim()),
+                nohp: document.getElementById('nohp').value,
+                device: escapeHtml(device),
+                keluhan: escapeHtml(document.getElementById('keluhan').value.trim()),
+                totalBiaya: totalBiaya, dp: dp, sisa: sisa,
+                estimasi: escapeHtml(document.getElementById('estimasi').value),
+                catatan: escapeHtml(document.getElementById('catatan').value),
+                tanggal: now.toLocaleDateString('id-ID'),
+                jam: now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),
+                timestamp: now.toISOString(),
+                kelengkapan: currentType === 'terima' ? Array.from(document.querySelectorAll('#kelengkapanSection input:checked')).map(cb => cb.value) : [],
+                kondisi: getKondisi(),
+                passwordDevice: escapeHtml(document.getElementById('passwordDevice').value),
+                fotoDevice: fotoDeviceData,
+                diagnosa: currentType === 'diagnosa' ? { hasil: escapeHtml(document.getElementById('hasilDiagnosa').value), sparepart: escapeHtml(document.getElementById('sparepart').value), status: document.getElementById('statusDiagnosa').value } : null,
+                selesai: currentType === 'selesai' ? { detail: escapeHtml(document.getElementById('detailPerbaikan').value), status: document.getElementById('statusSelesai').value, siapAmbil: escapeHtml(document.getElementById('siapAmbil').value) } : null,
+                ambil: currentType === 'ambil' ? { status: currentStatus, alasan: document.getElementById('alasanBatal').value } : null,
+                timeline: timeline
+            };
+            delete window._lanjutOriginalId;
+            renderPreview();
+            await saveToHistory(currentNota);
+            localStorage.removeItem('nota_draft');
+            document.getElementById('formCard').classList.remove('active');
+            document.getElementById('previewCard').classList.add('active');
+            updateWorkflowButtons();
+            if (currentType === 'selesai' && autoWASelesai) {
+                sendAutoWA(currentNota, 'selesai');
+            } else if (currentType === 'ambil' && currentNota.ambil?.status === 'diambil' && autoWAAmbil) {
+                sendAutoWA(currentNota, 'ambil');
+            }
+            if (document.getElementById('printThermal').checked && confirm('Cetak ke printer thermal?')) setTimeout(() => printBluetooth(), 1000);
+        } catch (err) { console.error(err); showToast('Kesalahan menyimpan nota'); } finally { hideLoading(); }
+    }
+
+    function getKondisi() {
+        let arr = [];
+        document.querySelectorAll('.kondisi-checkbox.active').forEach(el => arr.push(el.dataset.value));
+        let lainnya = document.getElementById('kondisiLainnya').value.trim();
+        if (lainnya) arr.push(escapeHtml(lainnya));
+        return arr;
+    }
+
+    function renderPreview() {
+        let badgeClass, badgeText, paperClass;
+        switch(currentType){
+            case 'terima': badgeClass='badge-terima'; badgeText='📥 NOTA PENERIMAAN'; paperClass='terima'; break;
+            case 'diagnosa': badgeClass='badge-diagnosa'; badgeText='🔍 HASIL DIAGNOSA'; paperClass='diagnosa'; break;
+            case 'selesai': badgeClass='badge-selesai'; badgeText='✅ SELESAI'; paperClass='selesai'; break;
+            case 'ambil': 
+                if(currentNota.ambil?.status==='batal'){ badgeClass='badge-batal'; badgeText='❌ DIBATALKAN'; paperClass='batal'; }
+                else { badgeClass='badge-ambil'; badgeText='📤 DIAMBIL'; paperClass='ambil'; }
+                break;
         }
-        
-        function getKondisi(){const a=[];document.querySelectorAll('.kondisi-checkbox.active').forEach(el=>a.push(el.dataset.value));const l=e('kondisiLainnya').value.trim();if(l)a.push(escapeHtml(l));return a}
-        
-        async function buatPreview(){
-            if(!validateForm()){showToast('Lengkapi data wajib!');return}
+        let html = `<div class="nota-header">`;
+        if(logoData) html+=`<img src="${logoData}" class="nota-logo">`;
+        html+=`<h2>${escapeHtml(tokoSettings.nama||'Nota Service HP')}</h2>`;
+        if(tokoSettings.slogan) html+=`<div class="nota-slogan">✨ ${escapeHtml(tokoSettings.slogan)}</div>`;
+        if(tokoSettings.alamat) html+=`<div class="nota-alamat">📍 ${escapeHtml(tokoSettings.alamat)}</div>`;
+        if(tokoSettings.telepon) html+=`<div class="nota-telp">📞 ${escapeHtml(tokoSettings.telepon)}</div>`;
+        html+=`<span class="nota-type-badge ${badgeClass}">${badgeText}</span>`;
+        html+=`<div style="font-size:12px; color:#666;">${currentNota.tanggal} • ${currentNota.jam}</div>`;
+        html+=`<div class="nota-id">${currentNota.notaId}</div></div>`;
+        html+=`<div class="nota-section"><div class="nota-section-title">👤 Pelanggan</div>`;
+        html+=`<div class="nota-row"><span class="nota-label">Nama</span><span class="nota-value">${currentNota.nama}</span></div>`;
+        html+=`<div class="nota-row"><span class="nota-label">No. HP</span><span class="nota-value">${currentNota.nohp}</span></div>`;
+        html+=`<div class="nota-row"><span class="nota-label">Device</span><span class="nota-value">${currentNota.device}</span></div>`;
+        if(currentNota.passwordDevice) html+=`<div class="nota-row"><span class="nota-label">Password/Pola</span><span class="nota-value">${currentNota.passwordDevice}</span></div>`;
+        html+=`</div><div class="nota-section"><div class="nota-section-title">📋 Detail Service</div>`;
+        html+=`<div><strong>Keluhan:</strong> ${currentNota.keluhan}</div>`;
+        if(currentNota.kelengkapan?.length) html+=`<div style="margin-top:5px;"><strong>Kelengkapan:</strong> ${currentNota.kelengkapan.join(', ')}</div>`;
+        if(currentNota.kondisi?.length) html+=`<div style="margin-top:5px;"><strong>Kondisi Fisik:</strong> ${currentNota.kondisi.join(', ')}</div>`;
+        if(currentNota.fotoDevice) html+=`<div style="margin-top:8px;"><img src="${currentNota.fotoDevice}" style="max-width:100%; max-height:100px; border-radius:8px;"></div>`;
+        if(currentNota.catatan) html+=`<div style="margin-top:5px;"><strong>📝 Catatan:</strong> ${currentNota.catatan}</div>`;
+        if(currentType==='diagnosa' && currentNota.diagnosa){
+            html+=`<div style="margin-top:10px;"><strong>🔍 Hasil Diagnosa:</strong> ${currentNota.diagnosa.hasil||'-'}</div>`;
+            if(currentNota.diagnosa.sparepart) html+=`<div><strong>Sparepart:</strong> ${currentNota.diagnosa.sparepart}</div>`;
+            let stat={bisa:'✅ Bisa diperbaiki',tidak:'❌ Tidak bisa diperbaiki',pending:'⏳ Menunggu konfirmasi'};
+            html+=`<div><strong>Status:</strong> ${stat[currentNota.diagnosa.status]||currentNota.diagnosa.status}</div>`;
+        }
+        if(currentType==='selesai' && currentNota.selesai){
+            html+=`<div style="margin-top:10px;"><strong>✅ Detail Perbaikan:</strong> ${currentNota.selesai.detail||'-'}</div>`;
+            let stat={normal:'✅ Berfungsi normal',partial:'⚠️ Berfungsi sebagian',tidak:'❌ Tidak bisa'};
+            html+=`<div><strong>Status:</strong> ${stat[currentNota.selesai.status]||currentNota.selesai.status}</div>`;
+            if(currentNota.selesai.siapAmbil) html+=`<div><strong>Siap diambil:</strong> ${currentNota.selesai.siapAmbil}</div>`;
+        }
+        if(currentType==='ambil' && currentNota.ambil){
+            if(currentNota.ambil.status==='diambil') html+=`<div style="margin-top:10px; background:#e8f5e9; padding:8px; border-radius:8px;"><strong>✅ Status:</strong> Sudah diambil oleh pelanggan</div>`;
+            else html+=`<div style="margin-top:10px; background:#ffebee; padding:8px; border-radius:8px;"><strong>❌ Status:</strong> Dibatalkan<br>Alasan: ${escapeHtml(currentNota.ambil.alasan||'-')}</div>`;
+        }
+        html+=`</div>`;
+        if(currentNota.totalBiaya>0){
+            html+=`<div class="nota-total"><div class="nota-row"><span class="nota-label">Total Biaya</span><span class="nota-value">Rp ${formatRupiah(currentNota.totalBiaya)}</span></div>`;
+            if(currentNota.dp>0) html+=`<div class="nota-row"><span class="nota-label">DP / Panjar</span><span class="nota-value">Rp ${formatRupiah(currentNota.dp)}</span></div><div class="nota-row"><span class="nota-label">Sisa Pembayaran</span><span class="nota-value">Rp ${formatRupiah(currentNota.sisa)}</span></div>`;
+            html+=`</div>`;
+        }
+        if(currentNota.timeline && currentNota.timeline.length>1){
+            html+=`<div class="timeline"><div class="timeline-title">📅 Timeline Service</div>`;
+            currentNota.timeline.forEach(item=>{
+                let name={terima:'📥 Diterima',diagnosa:'🔍 Diagnosa',selesai:'✅ Selesai',ambil:'📤 Diambil/Dibatalkan'}[item.status]||item.status;
+                html+=`<div class="timeline-item"><span class="timeline-badge"></span><span class="timeline-time">${new Date(item.timestamp).toLocaleString('id-ID')}</span> <strong>${name}</strong></div>`;
+            });
+            html+=`</div>`;
+        }
+
+        let footer = (footers[currentType]?.enabled && footers[currentType]?.text) ? footers[currentType].text : '';
+        if(footer) html+=`<div class="nota-footer">${escapeHtml(footer).replace(/\n/g,'<br>')}</div>`;
+
+        const warranty = getWarrantyText(currentNota);
+        if (warranty) html += `<div class="warranty-text">${warranty}</div>`;
+
+        if((currentType==='terima' || currentType==='ambil') && skText.trim()){
+            html+=`<div class="syarat-section"><strong>📜 SYARAT & KETENTUAN</strong>${escapeHtml(skText).replace(/\n/g,'<br>')}</div>`;
+        }
+
+        html+=`<div style="text-align:center; margin-top:20px; font-size:11px; color:#999;">Terima kasih atas kepercayaan Anda<br>Simpan nota ini sebagai bukti</div>`;
+        document.getElementById('notaContent').innerHTML = html;
+        document.getElementById('notaContent').className = `nota-paper ${paperClass}`;
+    }
+
+    function isNotaLocked() { return currentNota && currentNota.type === 'ambil'; }
+
+    function updateWorkflowButtons() {
+        let container = document.getElementById('workflowButtons');
+        if(!currentNota){ container.innerHTML=''; return; }
+        if(isNotaLocked()){
+            container.innerHTML='<div style="text-align:center; padding:10px; background:#ffebee; border-radius:12px; color:#c62828;">🔒 Nota sudah selesai (diambil/dibatalkan). Tidak dapat diedit lagi.</div>';
+            return;
+        }
+        let btns='';
+        if(currentType==='terima') btns='<button class="btn-workflow diagnosa" onclick="app.lanjutKe(\'diagnosa\')">🔍 Lanjut ke Diagnosa</button>';
+        else if(currentType==='diagnosa') btns='<button class="btn-workflow selesai" onclick="app.lanjutKe(\'selesai\')">✅ Lanjut ke Selesai</button>';
+        else if(currentType==='selesai') btns='<button class="btn-workflow ambil" onclick="app.lanjutKe(\'ambil\')">📤 Lanjut ke Ambil</button>';
+        if(btns) container.innerHTML=`<div style="margin-bottom:10px; font-size:13px;">📌 Lanjutkan ke tahap berikutnya:</div>${btns}`;
+        else container.innerHTML='';
+    }
+
+    async function lanjutKe(tipeBaru) {
+        if(!currentNota || isNotaLocked()){ showToast('Nota terkunci, tidak dapat dilanjutkan'); return; }
+        document.getElementById('nama').value = currentNota.nama;
+        document.getElementById('nohp').value = currentNota.nohp;
+        let parts = currentNota.device.split(' ');
+        document.getElementById('merek').value = parts[0]||'';
+        document.getElementById('model').value = parts.slice(1).join(' ')||'';
+        document.getElementById('keluhan').value = currentNota.keluhan;
+        document.getElementById('totalBiaya').value = currentNota.totalBiaya||0;
+        document.getElementById('dp').value = currentNota.dp||0;
+        hitungSisa();
+        document.getElementById('estimasi').value = currentNota.estimasi||'';
+        document.getElementById('catatan').value = currentNota.catatan||'';
+        document.getElementById('passwordDevice').value = currentNota.passwordDevice||'';
+        if(currentNota.kondisi){
+            document.querySelectorAll('.kondisi-checkbox').forEach(cb => cb.classList.remove('active'));
+            currentNota.kondisi.forEach(k => {
+                let el = Array.from(document.querySelectorAll('.kondisi-checkbox')).find(c => c.dataset.value === k);
+                if(el) el.classList.add('active');
+            });
+            let lainnya = currentNota.kondisi.filter(k => !['Penyok','Lecet','Retak','Basah','Lainnya'].includes(k)).join(', ');
+            document.getElementById('kondisiLainnya').value = lainnya;
+        }
+        if(currentNota.fotoDevice){
+            fotoDeviceData = currentNota.fotoDevice;
+            let preview = document.getElementById('fotoPreview');
+            preview.innerHTML = `<img src="${fotoDeviceData}" style="max-width:100%; max-height:100px;">`;
+            preview.style.display = 'block';
+        }
+        if(currentNota.kelengkapan) {
+            document.querySelectorAll('#kelengkapanSection input[type="checkbox"]').forEach(cb => cb.checked = currentNota.kelengkapan.includes(cb.value));
+        }
+        if(tipeBaru==='diagnosa'){
+            document.getElementById('hasilDiagnosa').value = '';
+            document.getElementById('sparepart').value = '';
+            document.getElementById('statusDiagnosa').value = 'bisa';
+        } else if(tipeBaru==='selesai'){
+            document.getElementById('detailPerbaikan').value = '';
+            document.getElementById('statusSelesai').value = 'normal';
+            document.getElementById('siapAmbil').value = '';
+        } else if(tipeBaru==='ambil'){
+            selectAmbilStatus('diambil');
+            document.getElementById('alasanBatal').value = 'Tidak bisa diperbaiki';
+        }
+        selectType(tipeBaru);
+        window._lanjutOriginalId = currentNota.originalId || currentNota.id;
+        document.getElementById('previewCard').classList.remove('active');
+        document.getElementById('formCard').classList.add('active');
+        showToast(`Silakan lengkapi data untuk tahap ${tipeBaru.toUpperCase()}`);
+    }
+
+    async function captureNotaAsImage(targetWidth = 400, quality = 0.8, scale = 2.5) {
+        const notaElem = document.getElementById('notaContent');
+        const originalWidth = notaElem.style.width;
+        const originalClass = notaElem.className;
+        notaElem.style.width = targetWidth + 'px';
+        notaElem.classList.add('capture-wide');
+        await new Promise(r => setTimeout(r, 50));
+        const canvas = await html2canvas(notaElem, { scale: scale, backgroundColor: '#ffffff', windowWidth: notaElem.scrollWidth, logging: false });
+        notaElem.style.width = originalWidth;
+        notaElem.className = originalClass;
+        return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    }
+
+    async function kirimWA(mode){
+        if(!currentNota) return;
+        let no = currentNota.nohp.replace(/^0/,'62');
+        if(mode==='teks'){
+            let template = localStorage.getItem('wa_template');
+            if(!template) template = `*{toko}*\n━━━━━━━━━━━━━━━\n{type_badge}\n━━━━━━━━━━━━━━━\n\n🆔 No: *{nota_id}*\n📅 {tanggal} | ⏰ {jam}\n\n👤 *Pelanggan:* {nama}\n📱 *Device:* {device}\n\n📋 *Keluhan:*\n{keluhan}\n\n{kelengkapan_line}\n💰 *Estimasi Biaya:* Rp {biaya}\n⏳ *Estimasi Waktu:* {estimasi}\n\n📝 *Catatan:* {catatan}\n\n━━━━━━━━━━━━\n{footer}`;
+            let badge = {terima:'📥 *NOTA PENERIMAAN*',diagnosa:'🔍 *HASIL DIAGNOSA*',selesai:'✅ *NOTA SELESAI*',ambil:currentNota.ambil?.status==='batal'?'❌ *DIBATALKAN*':'📤 *NOTA AMBIL*'}[currentType]||'📋 *NOTA SERVICE*';
+            let kelengkapanLine = currentNota.kelengkapan?.length ? `📦 *Kelengkapan:* ${currentNota.kelengkapan.join(', ')}` : '📦 *Kelengkapan:* -';
+            let msg = template.replace(/{toko}/g, tokoSettings.nama||'Service HP')
+                .replace(/{type_badge}/g, badge)
+                .replace(/{nota_id}/g, currentNota.notaId)
+                .replace(/{tanggal}/g, currentNota.tanggal)
+                .replace(/{jam}/g, currentNota.jam)
+                .replace(/{nama}/g, currentNota.nama)
+                .replace(/{device}/g, currentNota.device)
+                .replace(/{keluhan}/g, currentNota.keluhan)
+                .replace(/{kelengkapan_line}/g, kelengkapanLine)
+                .replace(/{biaya}/g, formatRupiah(currentNota.totalBiaya))
+                .replace(/{estimasi}/g, currentNota.estimasi||'-')
+                .replace(/{catatan}/g, currentNota.catatan||'-')
+                .replace(/{footer}/g, footers[currentType]?.enabled?footers[currentType].text:'');
+            window.open(`https://wa.me/${no}?text=${encodeURIComponent(msg)}`,'_blank');
+        } else if(mode==='gambar'){
             showLoading();
             try{
-                const device=`${e('merek').value} ${e('model').value}`.trim(),now=new Date(),notaId='SRV-'+Date.now().toString().slice(-6),originalId=window._lanjutOriginalId||notaId;
-                let timeline=[];if(window._lanjutOriginalId){const p=historyData.find(h=>h.id===window._lanjutOriginalId);if(p?.timeline)timeline=[...p.timeline]}
-                timeline.push({status:currentType,timestamp:now.toISOString(),waktu:now.toLocaleString('id-ID')});
-                const totalBiaya=parseFloat(e('totalBiaya').value)||0,dp=parseFloat(e('dp').value)||0,sisa=totalBiaya-dp;
-                
-                currentNota={id:notaId,type:currentType,notaId:notaId,originalId:originalId,nama:escapeHtml(e('nama').value.trim()),nohp:e('nohp').value,device:escapeHtml(device),keluhan:escapeHtml(e('keluhan').value.trim()),totalBiaya:totalBiaya,dp:dp,sisa:sisa,estimasi:escapeHtml(e('estimasi').value),catatan:escapeHtml(e('catatan').value),tanggal:now.toLocaleDateString('id-ID'),jam:now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),timestamp:now.toISOString(),kelengkapan:currentType==='terima'?Array.from(document.querySelectorAll('#kelengkapanSection input:checked')).map(cb=>cb.value):[],kondisi:getKondisi(),passwordDevice:escapeHtml(e('passwordDevice').value),fotoDevice:fotoDeviceData,diagnosa:currentType==='diagnosa'?{hasil:escapeHtml(e('hasilDiagnosa').value),sparepart:escapeHtml(e('sparepart').value),status:e('statusDiagnosa').value}:null,selesai:currentType==='selesai'?{detail:escapeHtml(e('detailPerbaikan').value),status:e('statusSelesai').value,siapAmbil:escapeHtml(e('siapAmbil').value)}:null,ambil:currentType==='ambil'?{status:currentStatus,alasan:e('alasanBatal').value}:null,timeline:timeline};
-                
-                delete window._lanjutOriginalId;
-                renderPreview();
-                await saveToHistory(currentNota);
-                localStorage.removeItem('nota_draft');
-                e('formCard').classList.remove('active');
-                e('previewCard').classList.add('active');
-                updateWorkflowButtons();
-                
-                if(currentType==='selesai'&&autoWASelesai)sendAutoWA(currentNota,'selesai');
-                else if(currentType==='ambil'&&currentNota.ambil?.status==='diambil'&&autoWAAmbil)sendAutoWA(currentNota,'ambil');
-                if(e('printThermal').checked)setTimeout(()=>printBluetooth(),1500);
-            }catch(err){showToast('Error menyimpan nota')}
+                const blob = await captureNotaAsImage(400, 0.8, 2.5);
+                if(navigator.share && navigator.canShare({files:[new File([blob], 'nota.jpg', {type:'image/jpeg'})]})) {
+                    await navigator.share({files:[new File([blob], 'nota.jpg', {type:'image/jpeg'})], title:`Nota ${currentNota.notaId}`});
+                } else {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `Nota_${currentNota.notaId}.jpg`;
+                    a.click();
+                }
+            } catch(e){ showToast('Gagal membuat gambar: ' + e.message); }
             hideLoading();
         }
-        
-        function renderPreview(){
-            let badgeClass,badgeText,paperClass;
-            switch(currentType){case'terima':badgeClass='badge-terima';badgeText='📥 NOTA PENERIMAAN';paperClass='terima';break;case'diagnosa':badgeClass='badge-diagnosa';badgeText='🔍 HASIL DIAGNOSA';paperClass='diagnosa';break;case'selesai':badgeClass='badge-selesai';badgeText='✅ NOTA SELESAI';paperClass='selesai';break;case'ambil':if(currentNota.ambil?.status==='batal'){badgeClass='badge-batal';badgeText='❌ DIBATALKAN';paperClass='batal'}else{badgeClass='badge-ambil';badgeText='📤 DIAMBIL';paperClass='ambil'}break}
-            let html=`<div class="nota-header">`;
-            if(logoData)html+=`<img src="${logoData}" class="nota-logo">`;
-            html+=`<h2>${escapeHtml(tokoSettings.nama||'Nota Service HP')}</h2>`;
-            if(tokoSettings.slogan)html+=`<div class="nota-slogan">✨ ${escapeHtml(tokoSettings.slogan)}</div>`;
-            if(tokoSettings.alamat)html+=`<div class="nota-alamat">📍 ${escapeHtml(tokoSettings.alamat)}</div>`;
-            if(tokoSettings.telepon)html+=`<div class="nota-telp">📞 ${escapeHtml(tokoSettings.telepon)}</div>`;
-            html+=`<span class="nota-type-badge ${badgeClass}">${badgeText}</span>`;
-            html+=`<div style="font-size:12px;color:#666">${currentNota.tanggal} • ${currentNota.jam}</div>`;
-            html+=`<div class="nota-id">${currentNota.notaId}</div></div>`;
-            html+=`<div class="nota-section"><div class="nota-section-title">👤 Pelanggan</div>`;
-            html+=`<div class="nota-row"><span class="nota-label">Nama</span><span class="nota-value">${currentNota.nama}</span></div>`;
-            html+=`<div class="nota-row"><span class="nota-label">No. HP</span><span class="nota-value">${currentNota.nohp}</span></div>`;
-            html+=`<div class="nota-row"><span class="nota-label">Device</span><span class="nota-value">${currentNota.device}</span></div>`;
-            if(currentNota.passwordDevice)html+=`<div class="nota-row"><span class="nota-label">Password</span><span class="nota-value">${currentNota.passwordDevice}</span></div>`;
-            html+=`</div><div class="nota-section"><div class="nota-section-title">📋 Detail Service</div>`;
-            html+=`<div><strong>Keluhan:</strong> ${currentNota.keluhan}</div>`;
-            if(currentNota.kelengkapan?.length)html+=`<div style="margin-top:5px"><strong>Kelengkapan:</strong> ${currentNota.kelengkapan.join(', ')}</div>`;
-            if(currentNota.kondisi?.length)html+=`<div style="margin-top:5px"><strong>Kondisi:</strong> ${currentNota.kondisi.join(', ')}</div>`;
-            if(currentNota.fotoDevice)html+=`<div style="margin-top:8px"><img src="${currentNota.fotoDevice}" style="max-width:100%;max-height:100px;border-radius:8px"></div>`;
-            if(currentNota.catatan)html+=`<div style="margin-top:5px"><strong>Catatan:</strong> ${currentNota.catatan}</div>`;
-            if(currentType==='diagnosa'&&currentNota.diagnosa){html+=`<div style="margin-top:10px"><strong>Hasil Diagnosa:</strong> ${currentNota.diagnosa.hasil||'-'}</div>`;if(currentNota.diagnosa.sparepart)html+=`<div><strong>Sparepart:</strong> ${currentNota.diagnosa.sparepart}</div>`;const st={bisa:'✅ Bisa diperbaiki',tidak:'❌ Tidak bisa',pending:'⏳ Menunggu konfirmasi'};html+=`<div><strong>Status:</strong> ${st[currentNota.diagnosa.status]}</div>`}
-            if(currentType==='selesai'&&currentNota.selesai){html+=`<div style="margin-top:10px"><strong>Detail Perbaikan:</strong> ${currentNota.selesai.detail||'-'}</div>`;const st={normal:'✅ Berfungsi normal',partial:'⚠️ Berfungsi sebagian',tidak:'❌ Tidak bisa'};html+=`<div><strong>Status:</strong> ${st[currentNota.selesai.status]}</div>`;if(currentNota.selesai.siapAmbil)html+=`<div><strong>Siap diambil:</strong> ${currentNota.selesai.siapAmbil}</div>`}
-            if(currentType==='ambil'&&currentNota.ambil){if(currentNota.ambil.status==='diambil')html+=`<div style="margin-top:10px;background:#e8f5e9;padding:8px;border-radius:8px"><strong>✅ Status:</strong> Sudah diambil</div>`;else html+=`<div style="margin-top:10px;background:#ffebee;padding:8px;border-radius:8px"><strong>❌ Status:</strong> Dibatalkan<br>Alasan: ${escapeHtml(currentNota.ambil.alasan||'-')}</div>`}
-            html+=`</div>`;
-            if(currentNota.totalBiaya>0){html+=`<div class="nota-total">`;html+=`<div class="nota-row"><span class="nota-label">Total</span><span class="nota-value">Rp ${formatRupiah(currentNota.totalBiaya)}</span></div>`;if(currentNota.dp>0){html+=`<div class="nota-row"><span class="nota-label">DP</span><span class="nota-value">Rp ${formatRupiah(currentNota.dp)}</span></div>`;html+=`<div class="nota-row"><span class="nota-label">Sisa</span><span class="nota-value">Rp ${formatRupiah(currentNota.sisa)}</span></div>`}html+=`</div>`}
-            if(currentNota.timeline?.length>1){html+=`<div class="timeline"><div class="timeline-title">📅 Timeline</div>`;currentNota.timeline.forEach(i=>{const n={terima:'📥 Diterima',diagnosa:'🔍 Diagnosa',selesai:'✅ Selesai',ambil:'📤 Diambil'}[i.status];html+=`<div class="timeline-item"><span class="timeline-badge"></span><span class="timeline-time">${new Date(i.timestamp).toLocaleString('id-ID')}</span> <strong>${n}</strong></div>`});html+=`</div>`}
-            const ft=(footers[currentType]?.enabled&&footers[currentType]?.text)?footers[currentType].text:'';if(ft)html+=`<div class="nota-footer">${escapeHtml(ft).replace(/\n/g,'<br>')}</div>`;
-            if((currentType==='terima'||currentType==='ambil')&&skText.trim())html+=`<div class="syarat-section"><strong>📜 SYARAT & KETENTUAN</strong>${escapeHtml(skText).replace(/\n/g,'<br>')}</div>`;
-            html+=`<div style="text-align:center;margin-top:20px;font-size:11px;color:#999">Terima kasih atas kepercayaan Anda<br>Simpan nota ini sebagai bukti</div>`;
-            e('notaContent').innerHTML=html;
-            e('notaContent').className=`nota-paper ${paperClass}`;
+    }
+
+    class ThermalPrinter {
+        constructor() { this.paperSize = localStorage.getItem('printer_size')||'58'; }
+        async print(data){
+            showLoading();
+            try{
+                let encoder = new EscPosEncoder();
+                encoder.initialize();
+                // Untuk ukuran 75mm dan 80mm, gunakan lebar karakter double (width=2)
+                if (this.paperSize === '80' || this.paperSize === '75') {
+                    encoder.width(2);
+                }
+                encoder.align('center').text(data.toko||'Service HP').newline();
+                if (data.slogan) encoder.align('center').text(data.slogan).newline();
+                if (data.telepon) encoder.align('center').text(`📞 ${data.telepon}`).newline();
+                encoder.text('===============================').newline().align('left');
+                encoder.text(`No   : ${data.id}`).newline().text(`Tgl  : ${data.tanggal}`).newline().text(`Nama : ${data.nama}`).newline().text(`HP   : ${data.nohp}`).newline().text(`Device: ${data.device}`).newline().text('-------------------------------').newline().text('Keluhan:').newline().text(data.keluhan).newline().text('-------------------------------').newline();
+                if(data.biaya>0) encoder.align('right').text(`Total: Rp ${data.biaya}`).newline().align('left');
+                encoder.align('center').text('\nTerima Kasih\n');
+                if(data.footer) encoder.text(data.footer).newline();
+                encoder.text('Simpan Nota Ini').newline().cut();
+                let cmd = encoder.encode();
+                if(navigator.bluetooth){
+                    let device = await navigator.bluetooth.requestDevice({filters:[{namePrefix:'Printer'},{namePrefix:'XP-'}], optionalServices:['000018f0-0000-1000-8000-00805f9b34fb']});
+                    let server = await device.gatt.connect();
+                    let service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                    let chars = await service.getCharacteristics();
+                    let char = chars.find(c=>c.properties.write||c.properties.writeWithoutResponse);
+                    if(char) await char.writeValue(cmd);
+                } else { showToast('Bluetooth tidak didukung browser ini. Coba cetak ke PDF.'); }
+                hideLoading(); showToast('✅ Nota terkirim ke printer');
+            } catch(e){ hideLoading(); showToast('❌ Gagal print: '+e.message); }
         }
-        
-        function updateWorkflowButtons(){const c=e('workflowButtons');if(!currentNota){c.innerHTML='';return}if(currentNota.type==='ambil'){c.innerHTML='<div style="text-align:center;padding:10px;background:#ffebee;border-radius:12px;color:#c62828">🔒 Nota sudah selesai</div>';return}let b='';if(currentType==='terima')b='<button class="btn-workflow diagnosa" onclick="app.lanjutKe(\'diagnosa\')">🔍 Lanjut ke Diagnosa →</button>';else if(currentType==='diagnosa')b='<button class="btn-workflow selesai" onclick="app.lanjutKe(\'selesai\')">✅ Lanjut ke Selesai →</button>';else if(currentType==='selesai')b='<button class="btn-workflow ambil" onclick="app.lanjutKe(\'ambil\')">📤 Lanjut ke Ambil →</button>';c.innerHTML=b?`<div style="margin-bottom:10px;font-size:13px;color:#666">📌 Lanjutkan:</div>${b}`:''}
-        
-        async function lanjutKe(t){if(!currentNota||currentNota.type==='ambil'){showToast('Nota terkunci');return}e('nama').value=currentNota.nama;e('nohp').value=currentNota.nohp;const p=currentNota.device.split(' ');e('merek').value=p[0]||'';e('model').value=p.slice(1).join(' ')||'';e('keluhan').value=currentNota.keluhan;e('totalBiaya').value=currentNota.totalBiaya||0;e('dp').value=currentNota.dp||0;hitungSisa();e('estimasi').value=currentNota.estimasi||'';e('catatan').value=currentNota.catatan||'';e('passwordDevice').value=currentNota.passwordDevice||'';if(currentNota.kondisi){document.querySelectorAll('.kondisi-checkbox').forEach(c=>c.classList.remove('active'));currentNota.kondisi.forEach(k=>{const el=Array.from(document.querySelectorAll('.kondisi-checkbox')).find(c=>c.dataset.value===k);if(el)el.classList.add('active')});const l=currentNota.kondisi.filter(k=>!['Penyok','Lecet','Retak','Basah','Matot'].includes(k)).join(', ');e('kondisiLainnya').value=l}if(currentNota.fotoDevice){fotoDeviceData=currentNota.fotoDevice;e('fotoPreview').innerHTML=`<img src="${fotoDeviceData}" style="max-width:100%;max-height:100px">`;e('fotoPreview').style.display='block'}if(currentNota.kelengkapan)document.querySelectorAll('#kelengkapanSection input[type="checkbox"]').forEach(cb=>cb.checked=currentNota.kelengkapan.includes(cb.value));if(t==='diagnosa'){e('hasilDiagnosa').value='';e('sparepart').value='';e('statusDiagnosa').value='bisa'}else if(t==='selesai'){e('detailPerbaikan').value='';e('statusSelesai').value='normal';e('siapAmbil').value=''}else if(t==='ambil'){selectAmbilStatus('diambil');e('alasanBatal').value='Tidak bisa diperbaiki'}selectType(t);window._lanjutOriginalId=currentNota.originalId||currentNota.id;e('previewCard').classList.remove('active');e('formCard').classList.add('active');showToast(`Lengkapi data untuk ${t.toUpperCase()}`)}
-        
-        async function captureNotaAsImage(tw=400,q=0.9,s=2.5){const ne=e('notaContent'),ow=ne.style.width,oc=ne.className;ne.style.width=tw+'px';ne.classList.add('capture-wide');await new Promise(r=>setTimeout(r,100));try{const c=await html2canvas(ne,{scale:s,backgroundColor:'#ffffff',windowWidth:ne.scrollWidth,logging:false});return new Promise(res=>c.toBlob(res,'image/jpeg',q))}finally{ne.style.width=ow;ne.className=oc}}
-        
-        async function kirimWA(m){if(!currentNota)return;const no=currentNota.nohp.replace(/^0/,'62');if(m==='teks'){let t=localStorage.getItem('wa_template');if(!t)t='*{toko}*\n━━━━━━━━━━━━━━━\n{type_badge}\n━━━━━━━━━━━━━━━\n\n🆔 No: *{nota_id}*\n📅 {tanggal} | ⏰ {jam}\n\n👤 *Pelanggan:* {nama}\n📱 *Device:* {device}\n\n📋 *Keluhan:*\n{keluhan}\n\n{kelengkapan_line}\n💰 *Biaya:* Rp {biaya}\n⏳ *Estimasi:* {estimasi}\n\n📝 *Catatan:* {catatan}\n\n━━━━━━━━━━━━\n{footer}';const b={terima:'📥 *NOTA PENERIMAAN*',diagnosa:'🔍 *HASIL DIAGNOSA*',selesai:'✅ *NOTA SELESAI*',ambil:currentNota.ambil?.status==='batal'?'❌ *DIBATALKAN*':'📤 *NOTA AMBIL*'}[currentType];const kl=currentNota.kelengkapan?.length?`📦 *Kelengkapan:* ${currentNota.kelengkapan.join(', ')}`:'📦 *Kelengkapan:* -';const msg=t.replace(/{toko}/g,tokoSettings.nama||'Service HP').replace(/{type_badge}/g,b).replace(/{nota_id}/g,currentNota.notaId).replace(/{tanggal}/g,currentNota.tanggal).replace(/{jam}/g,currentNota.jam).replace(/{nama}/g,currentNota.nama).replace(/{device}/g,currentNota.device).replace(/{keluhan}/g,currentNota.keluhan).replace(/{kelengkapan_line}/g,kl).replace(/{biaya}/g,formatRupiah(currentNota.totalBiaya)).replace(/{estimasi}/g,currentNota.estimasi||'-').replace(/{catatan}/g,currentNota.catatan||'-').replace(/{footer}/g,footers[currentType]?.enabled?footers[currentType].text:'');window.open(`https://wa.me/${no}?text=${encodeURIComponent(msg)}`,'_blank')}else if(m==='gambar'){showLoading();try{const b=await captureNotaAsImage(400,0.9,2.5),f=new File([b],`Nota_${currentNota.notaId}.jpg`,{type:'image/jpeg'});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:`Nota ${currentNota.notaId}`,text:`Nota untuk ${currentNota.nama}`})}else{const u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`Nota_${currentNota.notaId}.jpg`;a.click();URL.revokeObjectURL(u);showToast('Gambar diunduh')}}catch(e){showToast('Gagal: '+e.message)}hideLoading()}}
-        
-        async function shareNota(){if(!currentNota)return;try{if(navigator.share){await navigator.share({title:`Nota ${currentNota.notaId}`,text:`Nota untuk ${currentNota.nama} - ${currentNota.device}`,url:window.location.href})}else{await navigator.clipboard.writeText(`Nota ${currentNota.notaId}\n${currentNota.nama} - ${currentNota.device}\n${window.location.href}`);showToast('Link disalin')}}catch(e){}}
-        function shareApp(){const d={title:'Nota Service HP Pro',text:'Aplikasi manajemen service HP profesional',url:window.location.href};if(navigator.share)navigator.share(d);else{navigator.clipboard.writeText(`${d.title}\n${d.text}\n${d.url}`);showToast('Link disalin')}}
-        
-        async function printBluetooth(){if(!currentNota){showToast('Buat nota dulu');return}showLoading();try{const enc=new EscPosEncoder();enc.initialize();const ps=localStorage.getItem('printer_size')||'58';if(ps==='80'||ps==='75')enc.width(2);enc.align('center').text((tokoSettings.nama||'Service HP').toUpperCase()).newline();if(tokoSettings.slogan)enc.text(tokoSettings.slogan).newline();if(tokoSettings.telepon)enc.text(`Telp: ${tokoSettings.telepon}`).newline();enc.text('='.repeat(32)).newline().align('left');enc.text(`No   : ${currentNota.notaId}`).newline();enc.text(`Tgl  : ${currentNota.tanggal}`).newline();enc.text(`Nama : ${currentNota.nama}`).newline();enc.text(`HP   : ${currentNota.nohp}`).newline();enc.text(`Device: ${currentNota.device}`).newline();enc.text('-'.repeat(32)).newline();enc.text('KELUHAN:').newline();enc.text(currentNota.keluhan).newline();enc.text('-'.repeat(32)).newline();if(currentNota.totalBiaya>0){enc.align('right').text(`Total: Rp ${formatRupiah(currentNota.totalBiaya)}`).newline().align('left')}enc.align('center').text('\nTerima Kasih\n');if(footers[currentType]?.enabled)enc.text(footers[currentType].text).newline();enc.text('Simpan Nota Ini').newline().cut();const cmd=enc.encode();if(navigator.bluetooth){const d=await navigator.bluetooth.requestDevice({filters:[{namePrefix:'Printer'},{namePrefix:'POS'},{namePrefix:'XP-'}],optionalServices:['000018f0-0000-1000-8000-00805f9b34fb','e7810a71-73ae-499d-8c15-faa9aef0c3f2']}),s=await d.gatt.connect(),sv=await s.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb').catch(()=>s.getPrimaryService('e7810a71-73ae-499d-8c15-faa9aef0c3f2')),ch=await sv.getCharacteristics(),c=ch.find(x=>x.properties.write||x.properties.writeWithoutResponse);if(c){for(let i=0;i<cmd.byteLength;i+=512){await c.writeValue(cmd.slice(i,i+512))}showToast('✅ Tercetak!')}}else{showToast('Bluetooth tidak tersedia')}}catch(e){showToast('❌ Gagal: '+e.message)}hideLoading()}
-        
-        async function generatePDF(){showLoading();try{const b=await captureNotaAsImage(500,0.95,3),u=URL.createObjectURL(b),i=new Image();await new Promise((res,rej)=>{i.onload=res;i.onerror=rej;i.src=u});const{jsPDF}=window.jspdf,doc=new jsPDF('p','mm','a4'),iw=190,ih=(i.height*iw)/i.width,ph=doc.internal.pageSize.getHeight();let y=0;doc.addImage(u,'JPEG',10,10,iw,ih);y+=ih;while(y>ph-20){doc.addPage();doc.addImage(u,'JPEG',10,10-y,iw,ih);y-=ph-20}doc.save(`Nota_${currentNota.notaId}.pdf`);URL.revokeObjectURL(u);showToast('✅ PDF dibuat')}catch(e){showToast('Gagal PDF: '+e.message)}hideLoading()}
-        
-        function previewThermal(){if(!currentNota){showToast('Buat nota dulu');return}const d={toko:tokoSettings.nama||'Service HP',slogan:tokoSettings.slogan||'',telepon:tokoSettings.telepon||'',id:currentNota.notaId,tanggal:`${currentNota.tanggal} ${currentNota.jam}`,nama:currentNota.nama,nohp:currentNota.nohp,device:currentNota.device,keluhan:currentNota.keluhan,biaya:currentNota.totalBiaya,footer:footers[currentType]?.enabled?footers[currentType].text:''};const l=[];l.push('================================');l.push(d.toko.toUpperCase());if(d.slogan)l.push(d.slogan);if(d.telepon)l.push(`Telp: ${d.telepon}`);l.push('================================');l.push(`No   : ${d.id}`);l.push(`Tgl  : ${d.tanggal}`);l.push(`Nama : ${d.nama}`);l.push(`HP   : ${d.nohp}`);l.push(`Device: ${d.device}`);l.push('--------------------------------');l.push('KELUHAN:');l.push(d.keluhan);l.push('--------------------------------');if(d.biaya>0)l.push(`Total: Rp ${formatRupiah(d.biaya)}`);l.push('--------------------------------');l.push('Terima Kasih');if(d.footer)l.push(d.footer);l.push('Simpan Nota Ini');l.push('================================');e('thermalPreviewText').textContent=l.join('\n');e('thermalPreviewModal').classList.add('active')}
-        function closeThermalPreview(){e('thermalPreviewModal').classList.remove('active')}
-        
-        function selectType(t){currentType=t;['terima','diagnosa','selesai','ambil'].forEach(x=>{e(`btn${x.charAt(0).toUpperCase()+x.slice(1)}`).classList.toggle('active',x===t)});document.querySelectorAll('.step').forEach(s=>s.classList.toggle('active',s.dataset.step===t));e('formTitle').innerHTML={terima:'📥 Nota Penerimaan',diagnosa:'🔍 Hasil Diagnosa',selesai:'✅ Nota Selesai',ambil:'📤 Nota Ambil/Batal'}[t];e('kelengkapanSection').style.display=t==='terima'?'block':'none';e('diagnosaSection').style.display=t==='diagnosa'?'block':'none';e('selesaiSection').style.display=t==='selesai'?'block':'none';e('ambilSection').style.display=t==='ambil'?'block':'none'}
-        function selectAmbilStatus(s){currentStatus=s;e('statusDiambil').classList.toggle('active',s==='diambil');e('statusBatal').classList.toggle('active',s==='batal');e('alasanBatalGroup').style.display=s==='batal'?'block':'none'}
-        function handleFotoDevice(i){const f=i.files[0];if(!f)return;if(f.size>2*1024*1024){showToast('Max 2MB');return}const r=new FileReader();r.onload=(ev)=>{fotoDeviceData=ev.target.result;e('fotoPreview').innerHTML=`<img src="${fotoDeviceData}" style="max-width:100%;max-height:100px;border-radius:8px">`;e('fotoPreview').style.display='block'};r.readAsDataURL(f)}
-        function resetForm(){e('notaForm').reset();document.querySelectorAll('.kondisi-checkbox').forEach(c=>c.classList.remove('active'));e('kondisiLainnya').value='';document.querySelectorAll('.error-input').forEach(el=>el.classList.remove('error-input'));document.querySelectorAll('.validation-msg').forEach(el=>el.classList.remove('show'));fotoDeviceData=null;e('fotoPreview').innerHTML='';e('fotoPreview').style.display='none';selectType('terima');selectAmbilStatus('diambil');hitungSisa();localStorage.removeItem('nota_draft');showToast('Form direset')}
-        function buatNotaBaru(){resetForm();e('previewCard').classList.remove('active');e('formCard').classList.add('active');currentNota=null;delete window._lanjutOriginalId}
-        function backToForm(){document.querySelectorAll('.history-card,.settings-card,.preview-card').forEach(c=>c.classList.remove('active'));e('formCard').classList.add('active');delete window._lanjutOriginalId}
-        function showHistory(){renderHistory();document.querySelectorAll('.form-card,.preview-card,.settings-card').forEach(c=>c.classList.remove('active'));e('historyCard').classList.add('active')}
-        
-        function showSettings(){
-            e('settingNamaToko').value=tokoSettings.nama||'';
-            e('settingSlogan').value=tokoSettings.slogan||'';
-            e('settingPrimaryColor').value=tokoSettings.primaryColor||'#667eea';
-            e('primaryColorPreview').style.backgroundColor=tokoSettings.primaryColor||'#667eea';
-            e('settingAlamat').value=tokoSettings.alamat||'';
-            e('settingTelepon').value=tokoSettings.telepon||';
-            e('templateText').value=localStorage.getItem('wa_template')||';
-            e('printerSize').value=localStorage.getItem('printer_size')||'58';
-            e('autoWASelesai').checked=autoWASelesai;
-            e('autoWAAmbil').checked=autoWAAmbil;
-            e('waNotifTemplate').value=waNotifTemplate;
-            e('footerTerimaText').value=footers.terima.text;
-            e('footerTerimaEnabled').checked=footers.terima.enabled;
-            e('footerDiagnosaText').value=footers.diagnosa.text;
-            e('footerDiagnosaEnabled').checked=footers.diagnosa.enabled;
-            e('footerSelesaiText').value=footers.selesai.text;
-            e('footerSelesaiEnabled').checked=footers.selesai.enabled;
-            e('footerAmbilText').value=footers.ambil.text;
-            e('footerAmbilEnabled').checked=footers.ambil.enabled;
-            e('skText').value=skText;
-            if(logoData)e('logoPreview').innerHTML=`<img src="${logoData}" style="max-width:100%;max-height:100%">`;else e('logoPreview').innerHTML='<span style="color:#999;font-size:12px">Belum ada logo</span>';
-            document.querySelectorAll('.form-card,.preview-card,.history-card').forEach(c=>c.classList.remove('active'));
-            e('settingsCard').classList.add('active');
-        }
-        
-        function saveSettings(){
-            tokoSettings={nama:e('settingNamaToko').value,slogan:e('settingSlogan').value,primaryColor:e('settingPrimaryColor').value,alamat:e('settingAlamat').value,telepon:e('settingTelepon').value};
-            localStorage.setItem('toko_settings',JSON.stringify(tokoSettings));
-            localStorage.setItem('wa_template',e('templateText').value);
-            localStorage.setItem('printer_size',e('printerSize').value);
-            autoWASelesai=e('autoWASelesai').checked;
-            autoWAAmbil=e('autoWAAmbil').checked;
-            localStorage.setItem('auto_wa_selesai',autoWASelesai);
-            localStorage.setItem('auto_wa_ambil',autoWAAmbil);
-            waNotifTemplate=e('waNotifTemplate').value;
-            localStorage.setItem('wa_notif_template',waNotifTemplate);
-            footers={terima:{text:e('footerTerimaText').value,enabled:e('footerTerimaEnabled').checked},diagnosa:{text:e('footerDiagnosaText').value,enabled:e('footerDiagnosaEnabled').checked},selesai:{text:e('footerSelesaiText').value,enabled:e('footerSelesaiEnabled').checked},ambil:{text:e('footerAmbilText').value,enabled:e('footerAmbilEnabled').checked}};
-            localStorage.setItem('footers_settings',JSON.stringify(footers));
-            skText=e('skText').value;
-            localStorage.setItem('sk_text',skText);
-            e('tokoNameDisplay').innerText=tokoSettings.nama||'Nota Service HP';
-            if(tokoSettings.primaryColor){document.documentElement.style.setProperty('--primary',tokoSettings.primaryColor);e('themeColorMeta').setAttribute('content',tokoSettings.primaryColor)}
-            showToast('✅ Pengaturan disimpan');
-            backToForm();
-        }
-        
-        function handleLogo(ev){const f=ev.target.files[0];if(!f)return;if(f.size>500*1024){showToast('Max 500KB');return}const r=new FileReader();r.onload=(e)=>{logoData=e.target.result;localStorage.setItem('toko_logo',logoData);e('logoPreview').innerHTML=`<img src="${logoData}" style="max-width:100%;max-height:100%">`;e('headerIcon').innerHTML=`<img src="${logoData}" style="width:100%;height:100%;object-fit:contain">`;showToast('Logo diupload')};r.readAsDataURL(f)}
-        function removeLogo(){logoData=null;localStorage.removeItem('toko_logo');e('logoPreview').innerHTML='<span style="color:#999;font-size:12px">Belum ada logo</span>';e('headerIcon').innerHTML='📱';showToast('Logo dihapus')}
-        function toggleDarkMode(){document.body.classList.toggle('dark-mode');const d=document.body.classList.contains('dark-mode');localStorage.setItem('dark_mode',d);showToast(d?'🌙 Dark mode':'☀️ Light mode')}
-        
-        async function importContact(){if('contacts'in navigator&&navigator.contacts){try{const c=await navigator.contacts.select(['name','tel'],{multiple:false});if(c.length){e('nama').value=c[0].name[0];let p=c[0].tel[0];p=p.replace(/\D/g,'');if(p.startsWith('62'))p='0'+p.substring(2);if(p.startsWith('+62'))p='0'+p.substring(3);e('nohp').value=p;showToast('Kontak diimport')}}catch(e){showToast('Gagal akses kontak')}}else showToast('Fitur tidak tersedia')}
-        
-        async function renderHistory(){
-            await loadHistory();
-            const s=e('searchHistory').value.toLowerCase(),f=e('filterType').value;
-            let d=historyData;
-            if(s)d=d.filter(h=>h.nama.toLowerCase().includes(s)||h.nohp.includes(s)||h.device.toLowerCase().includes(s));
-            if(f)d=d.filter(h=>h.type===f);
-            const n=new Date(),bl=historyData.filter(h=>{const d=new Date(h.timestamp);return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear()}).length,se=historyData.filter(h=>h.type==='ambil'&&h.ambil?.status==='diambil').length,pe=historyData.filter(h=>h.type!=='ambil'||(h.type==='ambil'&&h.ambil?.status!=='diambil')).length;
-            e('statTotal').innerText=historyData.length;
-            e('statBulanIni').innerText=bl;
-            e('statSelesai').innerText=se;
-            e('statPending').innerText=pe;
-            const c=e('historyList');
-            if(!d.length){c.innerHTML='<div style="text-align:center;padding:40px;color:#999">Tidak ada data</div>';return}
-            const tc={terima:'#ff9800',diagnosa:'#2196f3',selesai:'#00bcd4',ambil:'#4caf50'};
-            c.innerHTML=d.map(h=>`<div class="history-item" onclick="app.loadHistoryItem('${h.id}')"><div class="history-header"><div class="history-name">${escapeHtml(h.nama)}</div><div class="history-type" style="background:${tc[h.type]}20;color:${tc[h.type]}">${h.type}</div></div><div style="font-size:13px;margin-bottom:4px">📱 ${escapeHtml(h.device)}</div><div style="font-size:12px;color:#666;display:flex;justify-content:space-between"><span>${h.notaId}</span><span style="font-weight:600;color:var(--primary)">Rp ${formatRupiah(h.totalBiaya)}</span></div><div style="font-size:11px;color:#999;margin-top:4px">${h.tanggal} • ${h.jam}</div></div>`).join('');
-        }
-        
-        async function loadHistoryItem(id){const n=historyData.find(h=>h.id===id);if(n){currentNota=n;currentType=n.type;renderPreview();updateWorkflowButtons();e('historyCard').classList.remove('active');e('previewCard').classList.add('active')}}
-        
-        function exportCSV(){if(!historyData.length){showToast('Tidak ada data');return}let c='\ufeffNo,ID,Tanggal,Jam,Tipe,Nama,NoHP,Device,Keluhan,Kondisi,Total,DP,Sisa\n';historyData.forEach((h,i)=>{c+=`${i+1},${h.notaId},${h.tanggal},${h.jam},${h.type},"${h.nama}","${h.nohp}","${h.device}","${h.keluhan}","${(h.kondisi||[]).join(';')}",${h.totalBiaya||0},${h.dp||0},${h.sisa||0}\n`});const b=new Blob([c],{type:'text/csv'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`Riwayat_${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(u);showToast('CSV diunduh')}
-        
-        function exportJSON(){const d={version:'2.0',exported:new Date().toISOString(),settings:tokoSettings,history:historyData,logo:logoData,footers:footers,sk:skText,autoWASelesai,autoWAAmbil,waNotifTemplate};const j=JSON.stringify(d,null,2),b=new Blob([j],{type:'application/json'}),u=URL.createObjectURL(b),a=document.createElement('a');a.href=u;a.download=`Backup_${new Date().toISOString().slice(0,10)}.json`;a.click();URL.revokeObjectURL(u);showToast('Backup dibuat')}
-        
-        async function restoreData(ev){const f=ev.target.files[0];if(!f||!confirm('⚠️ Timpa data existing?'))return;showLoading();const r=new FileReader();r.onload=async(e)=>{try{const d=JSON.parse(e.target.result);if(d.settings)tokoSettings=d.settings;if(d.history)for(const n of d.history)await saveToDB(n);if(d.logo)logoData=d.logo;if(d.footers)footers=d.footers;if(d.sk)skText=d.sk;if(d.autoWASelesai!==undefined)autoWASelesai=d.autoWASelesai;if(d.autoWAAmbil!==undefined)autoWAAmbil=d.autoWAAmbil;if(d.waNotifTemplate)waNotifTemplate=d.waNotifTemplate;localStorage.setItem('toko_settings',JSON.stringify(tokoSettings));localStorage.setItem('toko_logo',logoData||'');localStorage.setItem('footers_settings',JSON.stringify(footers));localStorage.setItem('sk_text',skText);localStorage.setItem('auto_wa_selesai',autoWASelesai);localStorage.setItem('auto_wa_ambil',autoWAAmbil);localStorage.setItem('wa_notif_template',waNotifTemplate);showToast('✅ Restore berhasil!');setTimeout(()=>location.reload(),1500)}catch(err){showToast('❌ File tidak valid')}hideLoading()};r.readAsText(f)}
-        
-        function clearAllData(){if(!confirm('⚠️ HAPUS SEMUA DATA?'))return;if(!confirm('PERMANEN tidak bisa dibatalkan!'))return;indexedDB.deleteDatabase('NotaServiceDB');localStorage.clear();showToast('Semua data dihapus');setTimeout(()=>location.reload(),1000)}
-        
-        async function init(){
-            await initDB();
-            const s=localStorage.getItem('toko_settings');if(s)tokoSettings=JSON.parse(s);
-            logoData=localStorage.getItem('toko_logo');if(logoData)e('headerIcon').innerHTML=`<img src="${logoData}" style="width:100%;height:100%;object-fit:contain">`;
-            if(localStorage.getItem('dark_mode')==='true')document.body.classList.add('dark-mode');
-            const f=localStorage.getItem('footers_settings');if(f)footers=JSON.parse(f);
-            skText=localStorage.getItem('sk_text')||'• Resiko kehilangan data bukan tanggung jawab kami.\n• Barang tidak diambil 30 hari dianggap hangus.\n• Garansi hanya untuk sparepart yang diganti.';
-            if(!localStorage.getItem('wa_template'))localStorage.setItem('wa_template','*{toko}*\n━━━━━━━━━━━━━━━\n{type_badge}\n━━━━━━━━━━━━━━━\n\n🆔 No: *{nota_id}*\n📅 {tanggal} | ⏰ {jam}\n\n👤 *Pelanggan:* {nama}\n📱 *Device:* {device}\n\n📋 *Keluhan:*\n{keluhan}\n\n{kelengkapan_line}\n💰 *Biaya:* Rp {biaya}\n⏳ *Estimasi:* {estimasi}\n\n📝 *Catatan:* {catatan}\n\n━━━━━━━━━━━━\n{footer}');
-            autoWASelesai=localStorage.getItem('auto_wa_selesai')==='true';
-            autoWAAmbil=localStorage.getItem('auto_wa_ambil')==='true';
-            waNotifTemplate=localStorage.getItem('wa_notif_template')||"Halo {nama}, perangkat {device} Anda sudah *{status}*. Silakan ambil di toko kami. Terima kasih 🙏\n\nNo Nota: {nota_id}";
-            e('tokoNameDisplay').innerText=tokoSettings.nama||'Nota Service HP';
-            if(tokoSettings.primaryColor){document.documentElement.style.setProperty('--primary',tokoSettings.primaryColor);e('themeColorMeta').setAttribute('content',tokoSettings.primaryColor)}
-            const d=localStorage.getItem('nota_draft');if(d){const x=JSON.parse(d);if((new Date()-new Date(x.timestamp))<24*3600000){e('nama').value=x.nama||'';e('nohp').value=x.nohp||'';e('merek').value=x.merek||'';e('model').value=x.model||'';e('keluhan').value=x.keluhan||''}}
-            ['nama','nohp','merek','model','keluhan'].forEach(i=>e(i)?.addEventListener('input',()=>localStorage.setItem('nota_draft',JSON.stringify({nama:e('nama').value,nohp:e('nohp').value,merek:e('merek').value,model:e('model').value,keluhan:e('keluhan').value,timestamp:new Date()}))));
-            document.querySelectorAll('.kondisi-checkbox').forEach(c=>c.addEventListener('click',()=>c.classList.toggle('active')));
-            e('settingPrimaryColor')?.addEventListener('input',(ev)=>e('primaryColorPreview').style.backgroundColor=ev.target.value);
-            if(!navigator.onLine)e('connectionStatus').classList.add('offline');
-            initPWA();
-            await loadHistory();
-        }
-        
-        return{
-            init,selectType,selectAmbilStatus,buatPreview,lanjutKe,resetForm,buatNotaBaru,backToForm,
-            showHistory,showSettings,saveSettings,renderHistory,loadHistoryItem,
-            exportCSV,exportJSON,backupData:exportJSON,restoreData,clearAllData,
-            handleFotoDevice,handleLogo,removeLogo,importContact,cleanPhoneInput,validatePhone,hitungSisa,toggleDarkMode,
-            kirimWA,shareNota,shareApp,printBluetooth,generatePDF,previewThermal,closeThermalPreview,
-            installPWA:()=>{if(deferredPrompt){deferredPrompt.prompt();deferredPrompt=null;e('installPrompt').classList.remove('show')}},
-            dismissInstall:()=>{e('installPrompt').classList.remove('show');localStorage.setItem('pwa_dismissed',Date.now())},
-            updateApp:()=>window.location.reload()
+    }
+    const printer = new ThermalPrinter();
+    async function printBluetooth(){ 
+        if(currentNota) {
+            printer.print({ 
+                toko: tokoSettings.nama||'Service HP',
+                slogan: tokoSettings.slogan || '',
+                telepon: tokoSettings.telepon || '',
+                id: currentNota.notaId, 
+                tanggal: currentNota.tanggal+' '+currentNota.jam, 
+                nama: currentNota.nama, 
+                nohp: currentNota.nohp, 
+                device: currentNota.device, 
+                keluhan: currentNota.keluhan, 
+                biaya: currentNota.totalBiaya, 
+                footer: footers[currentType]?.enabled?footers[currentType].text:''
+            });
+        } else showToast('Buat nota dulu'); 
+    }
+
+    async function generatePDF(){
+        showLoading();
+        try{
+            const blob = await captureNotaAsImage(500, 0.9, 2.5);
+            const imgData = URL.createObjectURL(blob);
+            let img = new Image();
+            await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; img.src = imgData; });
+            let { jsPDF } = window.jspdf;
+            let doc = new jsPDF('p', 'mm', 'a4');
+            let imgWidth = 190;
+            let imgHeight = (img.height * imgWidth) / img.width;
+            let pageHeight = doc.internal.pageSize.getHeight();
+            let y = 0;
+            while (y < imgHeight) {
+                doc.addImage(imgData, 'JPEG', 10, y === 0 ? 10 : -y, imgWidth, imgHeight);
+                y += pageHeight - 20;
+                if (y < imgHeight) doc.addPage();
+            }
+            doc.save(`Nota_${currentNota.notaId}.pdf`);
+            URL.revokeObjectURL(imgData);
+            showToast('✅ PDF siap');
+        } catch(e){ showToast('Gagal PDF: ' + e.message); }
+        hideLoading();
+    }
+
+    // ========== PREVIEW THERMAL ==========
+    function previewThermal() {
+        if (!currentNota) { showToast('Buat nota terlebih dahulu'); return; }
+        // Generate teks preview seperti yang akan dicetak thermal
+        const data = {
+            toko: tokoSettings.nama || 'Service HP',
+            slogan: tokoSettings.slogan || '',
+            telepon: tokoSettings.telepon || '',
+            id: currentNota.notaId,
+            tanggal: currentNota.tanggal + ' ' + currentNota.jam,
+            nama: currentNota.nama,
+            nohp: currentNota.nohp,
+            device: currentNota.device,
+            keluhan: currentNota.keluhan,
+            biaya: currentNota.totalBiaya,
+            footer: footers[currentType]?.enabled ? footers[currentType].text : ''
         };
-    })();
-    
-    if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',app.init);else app.init();
-    </script>
+        let lines = [];
+        lines.push('===============================');
+        lines.push(data.toko.toUpperCase());
+        if (data.slogan) lines.push(data.slogan);
+        if (data.telepon) lines.push(`📞 ${data.telepon}`);
+        lines.push('===============================');
+        lines.push(`No   : ${data.id}`);
+        lines.push(`Tgl  : ${data.tanggal}`);
+        lines.push(`Nama : ${data.nama}`);
+        lines.push(`HP   : ${data.nohp}`);
+        lines.push(`Device: ${data.device}`);
+        lines.push('-------------------------------');
+        lines.push('Keluhan:');
+        lines.push(data.keluhan);
+        lines.push('-------------------------------');
+        if (data.biaya > 0) {
+            lines.push(`Total: Rp ${formatRupiah(data.biaya)}`);
+        }
+        lines.push('-------------------------------');
+        lines.push('Terima Kasih');
+        if (data.footer) lines.push(data.footer);
+        lines.push('Simpan Nota Ini');
+        lines.push('===============================');
+        // Tampilkan modal
+        const modal = document.getElementById('thermalPreviewModal');
+        const pre = document.getElementById('thermalPreviewText');
+        pre.textContent = lines.join('\n');
+        modal.classList.add('active');
+    }
+
+    function closeThermalPreview() {
+        document.getElementById('thermalPreviewModal').classList.remove('active');
+    }
+
+    // ========== END PREVIEW THERMAL ==========
+
+    function selectType(type) {
+        currentType = type;
+        ['terima','diagnosa','selesai','ambil'].forEach(t=>{
+            document.getElementById(`btn${t.charAt(0).toUpperCase()+t.slice(1)}`).classList.toggle('active', t===type);
+        });
+        document.querySelectorAll('.step').forEach(s=>s.classList.toggle('active', s.dataset.step===type));
+        document.getElementById('formTitle').innerHTML = {terima:'📥 Nota Penerimaan',diagnosa:'🔍 Hasil Diagnosa',selesai:'✅ Nota Selesai',ambil:'📤 Nota Ambil/Batal'}[type];
+        document.getElementById('kelengkapanSection').style.display = type==='terima'?'block':'none';
+        document.getElementById('diagnosaSection').style.display = type==='diagnosa'?'block':'none';
+        document.getElementById('selesaiSection').style.display = type==='selesai'?'block':'none';
+        document.getElementById('ambilSection').style.display = type==='ambil'?'block':'none';
+    }
+
+    function selectAmbilStatus(status) {
+        currentStatus = status;
+        document.getElementById('statusDiambil').classList.toggle('active', status==='diambil');
+        document.getElementById('statusBatal').classList.toggle('active', status==='batal');
+        document.getElementById('alasanBatalGroup').style.display = status==='batal'?'block':'none';
+    }
+
+    function handleFotoDevice(input) {
+        let file = input.files[0];
+        if(!file) return;
+        if(file.size > 2*1024*1024){ showToast('Foto maksimal 2MB'); return; }
+        let reader = new FileReader();
+        reader.onload = e => {
+            fotoDeviceData = e.target.result;
+            let preview = document.getElementById('fotoPreview');
+            preview.innerHTML = `<img src="${fotoDeviceData}" style="max-width:100%; max-height:100px; border-radius:8px;">`;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function resetForm() {
+        document.getElementById('notaForm').reset();
+        document.querySelectorAll('.kondisi-checkbox').forEach(c => c.classList.remove('active'));
+        document.getElementById('kondisiLainnya').value = '';
+        fotoDeviceData = null;
+        document.getElementById('fotoPreview').innerHTML = '';
+        document.getElementById('fotoPreview').style.display = 'none';
+        selectType('terima');
+        selectAmbilStatus('diambil');
+        hitungSisa();
+        localStorage.removeItem('nota_draft');
+    }
+
+    function buatNotaBaru() {
+        resetForm();
+        document.getElementById('previewCard').classList.remove('active');
+        document.getElementById('formCard').classList.add('active');
+        currentNota = null;
+        delete window._lanjutOriginalId;
+    }
+
+    function backToForm() {
+        document.querySelectorAll('.history-card, .settings-card, .preview-card').forEach(c=>c.classList.remove('active'));
+        document.getElementById('formCard').classList.add('active');
+        delete window._lanjutOriginalId;
+    }
+
+    function showHistory() {
+        renderHistory();
+        document.querySelectorAll('.form-card, .preview-card, .settings-card').forEach(c=>c.classList.remove('active'));
+        document.getElementById('historyCard').classList.add('active');
+    }
+
+    function showSettings() {
+        document.getElementById('settingNamaToko').value = tokoSettings.nama||'';
+        document.getElementById('settingSlogan').value = tokoSettings.slogan||'';
+        document.getElementById('settingPrimaryColor').value = tokoSettings.primaryColor||'#667eea';
+        document.getElementById('primaryColorPreview').style.backgroundColor = tokoSettings.primaryColor||'#667eea';
+        document.getElementById('settingAlamat').value = tokoSettings.alamat||'';
+        document.getElementById('settingTelepon').value = tokoSettings.telepon||'';
+        document.getElementById('templateText').value = localStorage.getItem('wa_template')||'';
+        document.getElementById('printerSize').value = localStorage.getItem('printer_size')||'58';
+        autoWASelesai = localStorage.getItem('auto_wa_selesai') === 'true';
+        autoWAAmbil = localStorage.getItem('auto_wa_ambil') === 'true';
+        document.getElementById('autoWASelesai').checked = autoWASelesai;
+        document.getElementById('autoWAAmbil').checked = autoWAAmbil;
+        waNotifTemplate = localStorage.getItem('wa_notif_template') || "Halo {nama}, perangkat {device} Anda sudah *{status}*. Silakan ambil di toko kami. Terima kasih 🙏\n\n{nota_id}";
+        document.getElementById('waNotifTemplate').value = waNotifTemplate;
+        let f = JSON.parse(localStorage.getItem('footers_settings')||'{}');
+        footers = {...footers, ...f};
+        document.getElementById('footerTerimaText').value = footers.terima.text;
+        document.getElementById('footerTerimaEnabled').checked = footers.terima.enabled;
+        document.getElementById('footerDiagnosaText').value = footers.diagnosa.text;
+        document.getElementById('footerDiagnosaEnabled').checked = footers.diagnosa.enabled;
+        document.getElementById('footerSelesaiText').value = footers.selesai.text;
+        document.getElementById('footerSelesaiEnabled').checked = footers.selesai.enabled;
+        document.getElementById('footerAmbilText').value = footers.ambil.text;
+        document.getElementById('footerAmbilEnabled').checked = footers.ambil.enabled;
+        document.getElementById('skText').value = skText;
+        if(logoData) document.getElementById('logoPreview').innerHTML = `<img src="${logoData}" style="max-width:100%;max-height:100%;">`;
+        document.querySelectorAll('.form-card, .preview-card, .history-card').forEach(c=>c.classList.remove('active'));
+        document.getElementById('settingsCard').classList.add('active');
+    }
+
+    function saveSettings() {
+        tokoSettings = {
+            nama: document.getElementById('settingNamaToko').value,
+            slogan: document.getElementById('settingSlogan').value,
+            primaryColor: document.getElementById('settingPrimaryColor').value,
+            alamat: document.getElementById('settingAlamat').value,
+            telepon: document.getElementById('settingTelepon').value
+        };
+        localStorage.setItem('toko_settings', JSON.stringify(tokoSettings));
+        localStorage.setItem('wa_template', document.getElementById('templateText').value);
+        localStorage.setItem('printer_size', document.getElementById('printerSize').value);
+        autoWASelesai = document.getElementById('autoWASelesai').checked;
+        autoWAAmbil = document.getElementById('autoWAAmbil').checked;
+        localStorage.setItem('auto_wa_selesai', autoWASelesai);
+        localStorage.setItem('auto_wa_ambil', autoWAAmbil);
+        waNotifTemplate = document.getElementById('waNotifTemplate').value;
+        localStorage.setItem('wa_notif_template', waNotifTemplate);
+        footers = {
+            terima: {text: document.getElementById('footerTerimaText').value, enabled: document.getElementById('footerTerimaEnabled').checked},
+            diagnosa: {text: document.getElementById('footerDiagnosaText').value, enabled: document.getElementById('footerDiagnosaEnabled').checked},
+            selesai: {text: document.getElementById('footerSelesaiText').value, enabled: document.getElementById('footerSelesaiEnabled').checked},
+            ambil: {text: document.getElementById('footerAmbilText').value, enabled: document.getElementById('footerAmbilEnabled').checked}
+        };
+        localStorage.setItem('footers_settings', JSON.stringify(footers));
+        skText = document.getElementById('skText').value;
+        localStorage.setItem('sk_text', skText);
+        document.getElementById('tokoNameDisplay').innerText = tokoSettings.nama||'Nota Service HP';
+        document.getElementById('tokoSloganDisplay').innerText = tokoSettings.slogan||'';
+        if(tokoSettings.primaryColor){
+            document.documentElement.style.setProperty('--primary', tokoSettings.primaryColor);
+            document.getElementById('themeColorMeta').setAttribute('content', tokoSettings.primaryColor);
+        }
+        showToast('Pengaturan disimpan');
+        backToForm();
+    }
+
+    function handleLogo(e) {
+        let file = e.target.files[0];
+        if(!file) return;
+        if(file.size > 500*1024) return showToast('Logo max 500KB');
+        let reader = new FileReader();
+        reader.onload = ev => {
+            logoData = ev.target.result;
+            localStorage.setItem('toko_logo', logoData);
+            document.getElementById('logoPreview').innerHTML = `<img src="${logoData}" style="max-width:100%;max-height:100%;">`;
+            document.getElementById('headerIcon').innerHTML = `<img src="${logoData}" style="width:100%;height:100%;object-fit:contain;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function removeLogo() {
+        logoData = null;
+        localStorage.removeItem('toko_logo');
+        document.getElementById('logoPreview').innerHTML = '<span>Belum ada logo</span>';
+        document.getElementById('headerIcon').innerHTML = '📱';
+        showToast('Logo dihapus');
+    }
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('dark_mode', document.body.classList.contains('dark-mode'));
+    }
+
+    async function importContact() {
+        if('contacts' in navigator && navigator.contacts) {
+            try {
+                let contacts = await navigator.contacts.select(['name','tel'], {multiple: false});
+                if(contacts.length) {
+                    document.getElementById('nama').value = contacts[0].name[0];
+                    let phone = contacts[0].tel[0];
+                    phone = phone.replace(/\D/g,'');
+                    if(phone.startsWith('62')) phone = '0'+phone.substring(2);
+                    if(phone.startsWith('+62')) phone = '0'+phone.substring(3);
+                    document.getElementById('nohp').value = phone;
+                    showToast('Kontak diimport');
+                }
+            } catch(e) { showToast('Gagal mengakses kontak'); }
+        } else { showToast('Fitur kontak tidak tersedia'); }
+    }
+
+    async function renderHistory() {
+        await loadHistory();
+        let search = document.getElementById('searchHistory').value.toLowerCase();
+        let filter = document.getElementById('filterType').value;
+        let filtered = search ? historyData.filter(h => h.nama.toLowerCase().includes(search) || h.nohp.includes(search) || h.device.toLowerCase().includes(search)) : historyData;
+        if(filter) filtered = filtered.filter(h => h.type === filter);
+        let now = new Date();
+        let bulanIni = historyData.filter(h => { let d = new Date(h.timestamp); return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); }).length;
+        let selesai = historyData.filter(h => h.type==='ambil' && h.ambil?.status==='diambil').length;
+        let pending = historyData.filter(h => h.type==='terima'||h.type==='diagnosa').length;
+        document.getElementById('statTotal').innerText = historyData.length;
+        document.getElementById('statBulanIni').innerText = bulanIni;
+        document.getElementById('statSelesai').innerText = selesai;
+        document.getElementById('statPending').innerText = pending;
+        let list = document.getElementById('historyList');
+        if(!filtered.length){ list.innerHTML='<div style="text-align:center; padding:20px;">Tidak ada data</div>'; return; }
+        list.innerHTML = filtered.map(h => `
+            <div class="history-item" onclick="app.loadHistoryItem('${h.id}')">
+                <div class="history-header"><div class="history-name">${escapeHtml(h.nama)}</div><div class="history-type ${h.type}">${h.type}</div></div>
+                <div style="font-size:13px;">📱 ${escapeHtml(h.device)} | 💰 Rp ${formatRupiah(h.totalBiaya)}</div>
+                <div style="font-size:12px;">${h.notaId} | ${h.tanggal}</div>
+            </div>
+        `).join('');
+    }
+
+    async function loadHistoryItem(id) {
+        let nota = historyData.find(h => h.id === id);
+        if(nota){
+            currentNota = nota;
+            currentType = nota.type;
+            renderPreview();
+            updateWorkflowButtons();
+            document.getElementById('historyCard').classList.remove('active');
+            document.getElementById('previewCard').classList.add('active');
+        }
+    }
+
+    function exportCSV() {
+        if(!historyData.length) return;
+        let csv = '\ufeffNo,ID,OriginalID,Tanggal,Jam,Tipe,Nama,NoHP,Device,Keluhan,Kondisi,Password,TotalBiaya,DP,Sisa,Catatan\n';
+        historyData.forEach((h,i)=>{
+            csv += `${i+1},${h.notaId},${h.originalId||h.id},${h.tanggal},${h.jam},${h.type},${h.nama},${h.nohp},"${h.device}","${h.keluhan}","${(h.kondisi||[]).join(';')}","${h.passwordDevice||''}",${h.totalBiaya||0},${h.dp||0},${h.sisa||0},"${h.catatan||''}"\n`;
+        });
+        let blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Riwayat_${new Date().toISOString().slice(0,10)}.csv`;
+        a.click();
+    }
+
+    function exportJSON() {
+        let data = { settings:tokoSettings, history:historyData, logo:logoData, footers:footers, sk:skText, autoWASelesai, autoWAAmbil, waNotifTemplate, exported:new Date() };
+        let json = JSON.stringify(data,null,2);
+        let blob = new Blob([json],{type:'application/json'});
+        let a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `Backup_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    }
+
+    async function restoreData(e) {
+        let file = e.target.files[0];
+        if(!file || !confirm('⚠️ Ini akan menimpa data yang ada. Lanjutkan?')) return;
+        showLoading();
+        let reader = new FileReader();
+        reader.onload = async ev => {
+            try {
+                let data = JSON.parse(ev.target.result);
+                if(data.settings) tokoSettings = data.settings;
+                if(data.history) for(let n of data.history) await saveToDB(n);
+                if(data.logo) logoData = data.logo;
+                if(data.footers) footers = data.footers;
+                if(data.sk) skText = data.sk;
+                if(data.autoWASelesai !== undefined) autoWASelesai = data.autoWASelesai;
+                if(data.autoWAAmbil !== undefined) autoWAAmbil = data.autoWAAmbil;
+                if(data.waNotifTemplate) waNotifTemplate = data.waNotifTemplate;
+                localStorage.setItem('toko_settings',JSON.stringify(tokoSettings));
+                localStorage.setItem('toko_logo',logoData);
+                localStorage.setItem('footers_settings',JSON.stringify(footers));
+                localStorage.setItem('sk_text',skText);
+                localStorage.setItem('auto_wa_selesai', autoWASelesai);
+                localStorage.setItem('auto_wa_ambil', autoWAAmbil);
+                localStorage.setItem('wa_notif_template', waNotifTemplate);
+                showToast('Restore berhasil, reload...');
+                setTimeout(()=>location.reload(),1500);
+            } catch(e) { showToast('File tidak valid'); }
+            hideLoading();
+        };
+        reader.readAsText(file);
+    }
+
+    function clearAllData() {
+        if(confirm('⚠️ Hapus semua data? Tidak bisa dikembalikan!')) {
+            indexedDB.deleteDatabase('NotaServiceDB');
+            localStorage.clear();
+            showToast('Semua data dihapus');
+            setTimeout(()=>location.reload(),1000);
+        }
+    }
+
+    async function init() {
+        await initDB();
+        let saved = localStorage.getItem('toko_settings');
+        if(saved) tokoSettings = JSON.parse(saved);
+        logoData = localStorage.getItem('toko_logo');
+        if(logoData) document.getElementById('headerIcon').innerHTML = `<img src="${logoData}" style="width:100%;height:100%;object-fit:contain;">`;
+        if(localStorage.getItem('dark_mode') === 'true') document.body.classList.add('dark-mode');
+        let f = localStorage.getItem('footers_settings');
+        if(f) footers = JSON.parse(f);
+        skText = localStorage.getItem('sk_text') || '• Resiko kehilangan data bukan tanggung jawab kami.\n• Barang yang tidak diambil dalam 30 hari dianggap hangus.\n• Garansi hanya berlaku pada sparepart yang diganti.';
+        if(!localStorage.getItem('wa_template')) localStorage.setItem('wa_template', '*{toko}*\n━━━━━━━━━━━━━━━\n{type_badge}\n━━━━━━━━━━━━━━━\n\n🆔 No: *{nota_id}*\n📅 {tanggal} | ⏰ {jam}\n\n👤 *Pelanggan:* {nama}\n📱 *Device:* {device}\n\n📋 *Keluhan:*\n{keluhan}\n\n{kelengkapan_line}\n💰 *Estimasi Biaya:* Rp {biaya}\n⏳ *Estimasi Waktu:* {estimasi}\n\n📝 *Catatan:* {catatan}\n\n━━━━━━━━━━━━\n{footer}');
+        autoWASelesai = localStorage.getItem('auto_wa_selesai') === 'true';
+        autoWAAmbil = localStorage.getItem('auto_wa_ambil') === 'true';
+        waNotifTemplate = localStorage.getItem('wa_notif_template') || "Halo {nama}, perangkat {device} Anda sudah *{status}*. Silakan ambil di toko kami. Terima kasih 🙏\n\n{nota_id}";
+        document.getElementById('tokoNameDisplay').innerText = tokoSettings.nama||'Nota Service HP';
+        document.getElementById('tokoSloganDisplay').innerText = tokoSettings.slogan||'';
+        if(tokoSettings.primaryColor){
+            document.documentElement.style.setProperty('--primary', tokoSettings.primaryColor);
+            document.getElementById('themeColorMeta').setAttribute('content', tokoSettings.primaryColor);
+        }
+        let draft = localStorage.getItem('nota_draft');
+        if(draft){
+            let d = JSON.parse(draft);
+            if((new Date() - new Date(d.timestamp)) < 24*3600000){
+                document.getElementById('nama').value = d.nama||'';
+                document.getElementById('nohp').value = d.nohp||'';
+                document.getElementById('merek').value = d.merek||'';
+                document.getElementById('model').value = d.model||'';
+                document.getElementById('keluhan').value = d.keluhan||'';
+            }
+        }
+        document.querySelectorAll('#nama, #nohp, #merek, #model, #keluhan').forEach(inp => inp.addEventListener('input',()=>{
+            localStorage.setItem('nota_draft', JSON.stringify({
+                nama:document.getElementById('nama').value,
+                nohp:document.getElementById('nohp').value,
+                merek:document.getElementById('merek').value,
+                model:document.getElementById('model').value,
+                keluhan:document.getElementById('keluhan').value,
+                timestamp:new Date()
+            }));
+        }));
+        document.querySelectorAll('.kondisi-checkbox').forEach(el => el.addEventListener('click',()=>el.classList.toggle('active')));
+        if(!navigator.onLine) document.getElementById('connectionStatus').classList.add('offline');
+        await loadHistory();
+    }
+
+    return {
+        init,
+        selectType, selectAmbilStatus, buatPreview, renderPreview, updateWorkflowButtons, lanjutKe,
+        kirimWA, printBluetooth, generatePDF, exportCSV, exportJSON, restoreData, clearAllData,
+        showHistory, showSettings, saveSettings, handleLogo, removeLogo, toggleDarkMode, backToForm,
+        buatNotaBaru, resetForm, importContact, handleFotoDevice, cleanPhoneInput, validatePhone,
+        hitungSisa, loadHistoryItem, renderHistory, backupData: exportJSON,
+        previewThermal, closeThermalPreview
+    };
+})();
+
+app.init();
+
+// Registrasi Service Worker (PWA)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('Service Worker registered', reg))
+        .catch(err => console.log('Service Worker registration failed', err));
+}
+</script>
 </body>
 </html>
