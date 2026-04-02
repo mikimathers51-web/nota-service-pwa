@@ -4,41 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#667eea" id="themeColorMeta">
-    <title>Nota Service HP - Profesional</title>
-
-    <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Nota Service">
-    <meta name="mobile-web-app-capable" content="yes">
-
+    <title>Nota Service HP - Profesional</title>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/esc-pos-encoder@1.2.0/dist/esc-pos-encoder.min.js"></script>
     <style>
-        /* Semua CSS asli tetap di sini (salin dari kode awal Anda) */
+        /* CSS tidak berubah dari sebelumnya, disalin utuh agar tampilan sama */
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        :root { 
-            --primary: #667eea; 
-            --secondary: #764ba2; 
-            --success: #4caf50; 
-            --warning: #ff9800; 
-            --danger: #f44336; 
-            --info: #00bcd4; 
-            --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-            --card-bg: white; 
-            --text: #333; 
-            --border: #e4e4e4;
-            --slogan-color: #666;
-        }
-        body.dark-mode { 
-            --bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); 
-            --card-bg: #16213e; 
-            --text: #eaeaea; 
-            --border: #2a2a4a;
-            --slogan-color: #aaa;
-        }
+        :root { --primary: #667eea; --secondary: #764ba2; --success: #4caf50; --warning: #ff9800; --danger: #f44336; --info: #00bcd4; --bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%); --card-bg: white; --text: #333; --border: #e4e4e4; --slogan-color: #666; }
+        body.dark-mode { --bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); --card-bg: #16213e; --text: #eaeaea; --border: #2a2a4a; --slogan-color: #aaa; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); min-height: 100vh; padding: 15px; padding-bottom: 30px; color: var(--text); transition: all 0.3s ease; }
         .container { max-width: 500px; margin: 0 auto; }
         .header { text-align: center; padding: 20px 0; color: white; }
@@ -207,6 +183,19 @@
             padding: 5px 12px;
             cursor: pointer;
         }
+        .btn-save-contact {
+            background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+            color: white;
+            margin-top: 8px;
+            font-size: 12px;
+            padding: 8px;
+        }
+        .printer-settings {
+            background: rgba(0,0,0,0.05);
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
     </style>
 </head>
 <body>
@@ -247,8 +236,12 @@
             <div class="form-title"><span id="formTitle">📥 Nota Penerimaan HP</span></div>
             <div class="form-group">
                 <label>Nama Pelanggan *</label>
-                <div class="input-with-button"><input type="text" id="nama" required><button type="button" class="btn-import" onclick="app.importContact()">📇</button></div>
+                <div class="input-with-button">
+                    <input type="text" id="nama" required>
+                    <button type="button" class="btn-import" onclick="app.importContact()">📇</button>
+                </div>
                 <div class="validation-msg" id="namaError"></div>
+                <button type="button" class="btn-secondary btn-save-contact" onclick="app.saveContact()">📇 Simpan ke Kontak</button>
             </div>
             <div class="form-group">
                 <label>Nomor HP / WhatsApp *</label>
@@ -273,7 +266,7 @@
             </div>
             <div class="form-group"><label>Estimasi Waktu</label><input type="text" id="estimasi" placeholder="1-2 hari"></div>
             <div class="form-group"><label>Catatan Tambahan</label><input type="text" id="catatan"></div>
-            <div class="form-group"><label><input type="checkbox" id="printThermal"> Auto-print ke Bluetooth Printer setelah simpan</label></div>
+            <!-- Auto-print checkbox dihapus -->
             <button type="submit" class="btn-primary">👁️ Lihat & Simpan Nota</button>
             <button type="button" class="btn-secondary" onclick="app.resetForm()">🗑️ Reset Form</button>
         </form>
@@ -282,7 +275,29 @@
     <!-- PREVIEW CARD -->
     <div class="preview-card" id="previewCard">
         <div class="nota-paper" id="notaContent"></div>
-        <div style="background:#f5f5f5; padding:15px; border-radius:12px; margin-bottom:15px;"><div style="font-weight:600; margin-bottom:10px;">🖨️ Opsi Cetak & Kirim:</div><div class="action-grid"><button class="btn-action btn-wa-text" onclick="app.kirimWA('teks')">💬<br>WA Teks</button><button class="btn-action btn-wa-img" onclick="app.kirimWA('gambar')">📷<br>WA Gambar</button><button class="btn-action btn-bluetooth" onclick="app.printBluetooth()">🖨️<br>Bluetooth</button><button class="btn-action btn-pdf" onclick="app.generatePDF()">📄<br>PDF</button><button class="btn-action btn-preview-thermal" onclick="app.previewThermal()">🔍<br>Preview Thermal</button></div><button class="btn-secondary" onclick="window.print()">Cetak ke Printer Biasa</button></div>
+        <div style="background:#f5f5f5; padding:15px; border-radius:12px; margin-bottom:15px;">
+            <div style="font-weight:600; margin-bottom:10px;">🖨️ Opsi Cetak & Kirim:</div>
+            <div class="action-grid">
+                <button class="btn-action btn-wa-text" onclick="app.kirimWA('teks')">💬<br>WA Teks</button>
+                <button class="btn-action btn-wa-img" onclick="app.kirimWA('gambar')">📷<br>WA Gambar</button>
+                <button class="btn-action btn-bluetooth" onclick="app.printBluetooth()">🖨️<br>Bluetooth</button>
+                <button class="btn-action btn-pdf" onclick="app.generatePDF()">📄<br>PDF</button>
+                <button class="btn-action btn-preview-thermal" onclick="app.previewThermal()">🔍<br>Preview Thermal</button>
+            </div>
+            <div class="printer-settings">
+                <details>
+                    <summary>⚙️ Pengaturan Printer Bluetooth</summary>
+                    <div style="margin-top:8px;">
+                        <label style="font-size:12px;">ID Printer (opsional):</label>
+                        <input type="text" id="printerDeviceId" placeholder="Isi jika scan gagal" style="padding:8px; font-size:12px;">
+                        <button class="btn-secondary" onclick="app.savePrinterId()" style="margin-top:5px;">💾 Simpan ID</button>
+                        <button class="btn-secondary" onclick="app.clearPrinterId()" style="margin-top:5px;">🗑️ Hapus ID</button>
+                        <div style="font-size:11px; color:#666; margin-top:5px;">Masukkan device ID dari printer yang pernah terhubung (contoh: 00:11:22:33:44:55)</div>
+                    </div>
+                </details>
+            </div>
+            <button class="btn-secondary" onclick="window.print()">Cetak ke Printer Biasa</button>
+        </div>
         <div class="workflow-buttons" id="workflowButtons"></div>
         <button class="btn-secondary" onclick="app.buatNotaBaru()">🔄 Buat Nota Baru</button>
         <button class="btn-secondary" onclick="app.backToForm()">← Kembali Edit</button>
@@ -294,7 +309,11 @@
         <div class="stats-grid"><div class="stat-card"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Total Nota</div></div><div class="stat-card"><div class="stat-value" id="statBulanIni">0</div><div class="stat-label">Bulan Ini</div></div><div class="stat-card"><div class="stat-value" id="statSelesai">0</div><div class="stat-label">Selesai</div></div><div class="stat-card"><div class="stat-value" id="statPending">0</div><div class="stat-label">Pending</div></div></div>
         <div><input type="text" id="searchHistory" placeholder="Cari nama, no hp, atau device..." oninput="app.renderHistory()" style="margin-bottom:10px;"><select id="filterType" onchange="app.renderHistory()"><option value="">Semua Status</option><option value="terima">Terima</option><option value="diagnosa">Diagnosa</option><option value="selesai">Selesai</option><option value="ambil">Ambil</option></select></div>
         <div id="historyList" style="max-height:400px; overflow-y:auto;"></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;"><button class="btn-secondary" onclick="app.exportCSV()">📊 Export CSV</button><button class="btn-secondary" onclick="app.exportJSON()">💾 Backup Data</button></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+            <button class="btn-secondary" onclick="app.exportCSV()">📊 Export CSV</button>
+            <button class="btn-secondary" onclick="app.exportJSON()">💾 Backup JSON</button>
+            <button class="btn-secondary" onclick="app.backupToDrive()">☁️ Backup ke Google Drive</button>
+        </div>
     </div>
 
     <!-- SETTINGS CARD -->
@@ -327,8 +346,20 @@
 </div>
 
 <script>
-// ====================== Aplikasi dengan Preview Cetak Thermal & Dukungan 75mm ======================
+// ====================== APLIKASI DENGAN PERBAIKAN ======================
 const app = (function() {
+    // ---------------------- Helper Capacitor ----------------------
+    function isCapacitor() {
+        return typeof Capacitor !== 'undefined' && Capacitor.getPlatform !== undefined;
+    }
+    function getPlugin(name) {
+        if (isCapacitor() && Capacitor.Plugins && Capacitor.Plugins[name]) {
+            return Capacitor.Plugins[name];
+        }
+        return null;
+    }
+
+    // ---------------------- Variabel Global ----------------------
     let db;
     let currentType = 'terima';
     let currentStatus = 'diambil';
@@ -336,35 +367,26 @@ const app = (function() {
     let tokoSettings = {};
     let historyData = [];
     let logoData = null;
-    let fotoDeviceData = null;
+    let fotoDevicePath = null;          // Simpan path file foto (jika Capacitor)
+    let fotoDeviceData = null;           // Fallback base64 untuk web
     let footers = { terima:{text:'',enabled:false}, diagnosa:{text:'',enabled:false}, selesai:{text:'',enabled:false}, ambil:{text:'',enabled:false} };
     let skText = "";
     let autoWASelesai = false;
     let autoWAAmbil = false;
     let waNotifTemplate = "";
+    let lastPrinterId = localStorage.getItem('last_printer_id') || '';
 
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-
+    // ---------------------- UI Helpers ----------------------
     function showToast(msg) {
         let t = document.getElementById('toast');
         t.textContent = msg;
         t.classList.add('show');
         setTimeout(() => t.classList.remove('show'), 3000);
     }
-
     function showLoading() { document.getElementById('loadingOverlay').classList.add('show'); }
     function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
-
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
     function formatRupiah(num) { return parseInt(num||0).toLocaleString('id-ID'); }
-
     function cleanPhoneInput(el) {
         let v = el.value.replace(/\D/g,'');
         if (v.startsWith('62')) v = '0'+v.substring(2);
@@ -372,7 +394,6 @@ const app = (function() {
         el.value = v;
         return v;
     }
-
     function validatePhone() {
         let inp = document.getElementById('nohp');
         let v = inp.value;
@@ -381,7 +402,6 @@ const app = (function() {
         document.getElementById('phoneValidation').classList.toggle('show', !valid && v !== '');
         return valid;
     }
-
     function hitungSisa() {
         let total = parseFloat(document.getElementById('totalBiaya').value)||0;
         let dp = parseFloat(document.getElementById('dp').value)||0;
@@ -389,23 +409,18 @@ const app = (function() {
         document.getElementById('sisa').value = sisa > 0 ? sisa.toLocaleString('id-ID') : '0';
     }
 
+    // ---------------------- IndexedDB (sama) ----------------------
     function initDB() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open('NotaServiceDB', 7);
+            const request = indexedDB.open('NotaServiceDB', 8); // increment version
             request.onerror = (e) => reject(e.target.error);
-            request.onsuccess = (e) => {
-                db = e.target.result;
-                resolve(db);
-            };
+            request.onsuccess = (e) => { db = e.target.result; resolve(db); };
             request.onupgradeneeded = (e) => {
                 const db = e.target.result;
-                if (!db.objectStoreNames.contains('nota')) {
-                    db.createObjectStore('nota', { keyPath: 'id' });
-                }
+                if (!db.objectStoreNames.contains('nota')) db.createObjectStore('nota', { keyPath: 'id' });
             };
         });
     }
-
     async function saveToDB(data) {
         if (!db) await initDB();
         return new Promise((resolve, reject) => {
@@ -416,7 +431,6 @@ const app = (function() {
             req.onerror = reject;
         });
     }
-
     async function getAllFromDB() {
         if (!db) await initDB();
         return new Promise((resolve, reject) => {
@@ -427,7 +441,6 @@ const app = (function() {
             req.onerror = reject;
         });
     }
-
     async function saveToHistory(nota) {
         try {
             await saveToDB(nota);
@@ -436,7 +449,6 @@ const app = (function() {
             else historyData.unshift(nota);
         } catch (err) { console.error(err); showToast('Gagal menyimpan nota!'); }
     }
-
     async function loadHistory() {
         try {
             const data = await getAllFromDB();
@@ -444,6 +456,7 @@ const app = (function() {
         } catch (err) { historyData = []; }
     }
 
+    // ---------------------- Validasi & Data ----------------------
     function validateForm() {
         let valid = true;
         const nama = document.getElementById('nama').value.trim();
@@ -458,7 +471,13 @@ const app = (function() {
         if (!keluhan) { document.getElementById('keluhanError').classList.add('show'); valid = false; } else { document.getElementById('keluhanError').classList.remove('show'); }
         return valid;
     }
-
+    function getKondisi() {
+        let arr = [];
+        document.querySelectorAll('.kondisi-checkbox.active').forEach(el => arr.push(el.dataset.value));
+        let lainnya = document.getElementById('kondisiLainnya').value.trim();
+        if (lainnya) arr.push(escapeHtml(lainnya));
+        return arr;
+    }
     function getWarrantyText(nota) {
         if (nota.type !== 'selesai' && nota.type !== 'ambil') return '';
         let selesaiTimestamp = null;
@@ -472,7 +491,6 @@ const app = (function() {
         expiry.setDate(expiry.getDate() + 30);
         return `✅ Garansi sparepart 30 hari (s.d. ${expiry.toLocaleDateString('id-ID')})`;
     }
-
     async function sendAutoWA(nota, statusType) {
         if (!nota.nohp) return;
         let template = waNotifTemplate;
@@ -488,6 +506,90 @@ const app = (function() {
         showToast(`Notifikasi WA dikirim ke ${nota.nama}`);
     }
 
+    // ---------------------- Foto Device dengan Filesystem ----------------------
+    async function compressAndSavePhoto(fileOrUri) {
+        if (!isCapacitor()) {
+            // Fallback: simpan base64
+            return new Promise((resolve) => {
+                let reader = new FileReader();
+                reader.onload = e => resolve(e.target.result);
+                reader.readAsDataURL(fileOrUri);
+            });
+        }
+        const Filesystem = getPlugin('Filesystem');
+        if (!Filesystem) return null;
+        try {
+            // Jika input adalah file picker (web), kita perlu baca sebagai base64 lalu simpan sebagai file
+            let base64Data;
+            if (fileOrUri instanceof File) {
+                base64Data = await new Promise((resolve) => {
+                    let reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result.split(',')[1]);
+                    reader.readAsDataURL(fileOrUri);
+                });
+            } else {
+                // Asumsinya fileOrUri adalah path atau dataUrl
+                base64Data = fileOrUri;
+            }
+            const fileName = `foto_${Date.now()}.jpg`;
+            const result = await Filesystem.writeFile({
+                path: fileName,
+                data: base64Data,
+                directory: 'CACHE',
+                recursive: true
+            });
+            return result.uri;
+        } catch (e) {
+            console.error('Gagal simpan foto', e);
+            return null;
+        }
+    }
+
+    async function handleFotoDevice(input) {
+        if (isCapacitor()) {
+            const Camera = getPlugin('Camera');
+            if (Camera) {
+                try {
+                    await Camera.requestPermissions();
+                    const photo = await Camera.getPhoto({
+                        quality: 50,           // kompresi lebih rendah
+                        allowEditing: false,
+                        resultType: 'uri',     // dapatkan URI file
+                        targetWidth: 800,
+                        targetHeight: 800
+                    });
+                    if (photo && photo.path) {
+                        fotoDevicePath = photo.path;
+                        // Tampilkan preview
+                        let preview = document.getElementById('fotoPreview');
+                        preview.innerHTML = `<img src="${photo.path}" style="max-width:100%; max-height:100px; border-radius:8px;">`;
+                        preview.style.display = 'block';
+                        fotoDeviceData = null; // hapus base64
+                    }
+                } catch (err) {
+                    console.error('Camera error:', err);
+                    showToast('Gagal mengambil foto: ' + err.message);
+                }
+            } else {
+                showToast('Plugin kamera tidak tersedia');
+            }
+        } else {
+            let file = input.files[0];
+            if(!file) return;
+            if(file.size > 2*1024*1024){ showToast('Foto maksimal 2MB'); return; }
+            let reader = new FileReader();
+            reader.onload = e => {
+                fotoDeviceData = e.target.result;
+                fotoDevicePath = null;
+                let preview = document.getElementById('fotoPreview');
+                preview.innerHTML = `<img src="${fotoDeviceData}" style="max-width:100%; max-height:100px; border-radius:8px;">`;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // ---------------------- Buat Preview & Simpan ----------------------
     async function buatPreview() {
         if (!validateForm()) { showToast('Harap lengkapi data wajib!'); return; }
         showLoading();
@@ -505,6 +607,15 @@ const app = (function() {
             const totalBiaya = parseFloat(document.getElementById('totalBiaya').value)||0;
             const dp = parseFloat(document.getElementById('dp').value)||0;
             const sisa = totalBiaya - dp;
+            
+            // Simpan foto device (path atau base64)
+            let fotoStorage = null;
+            if (isCapacitor() && fotoDevicePath) {
+                fotoStorage = { type: 'file', path: fotoDevicePath };
+            } else if (fotoDeviceData) {
+                fotoStorage = { type: 'base64', data: fotoDeviceData };
+            }
+            
             currentNota = {
                 id: notaId, type: currentType, notaId: notaId, originalId: originalId,
                 nama: escapeHtml(document.getElementById('nama').value.trim()),
@@ -520,7 +631,7 @@ const app = (function() {
                 kelengkapan: currentType === 'terima' ? Array.from(document.querySelectorAll('#kelengkapanSection input:checked')).map(cb => cb.value) : [],
                 kondisi: getKondisi(),
                 passwordDevice: escapeHtml(document.getElementById('passwordDevice').value),
-                fotoDevice: fotoDeviceData,
+                fotoDevice: fotoStorage,
                 diagnosa: currentType === 'diagnosa' ? { hasil: escapeHtml(document.getElementById('hasilDiagnosa').value), sparepart: escapeHtml(document.getElementById('sparepart').value), status: document.getElementById('statusDiagnosa').value } : null,
                 selesai: currentType === 'selesai' ? { detail: escapeHtml(document.getElementById('detailPerbaikan').value), status: document.getElementById('statusSelesai').value, siapAmbil: escapeHtml(document.getElementById('siapAmbil').value) } : null,
                 ambil: currentType === 'ambil' ? { status: currentStatus, alasan: document.getElementById('alasanBatal').value } : null,
@@ -533,21 +644,9 @@ const app = (function() {
             document.getElementById('formCard').classList.remove('active');
             document.getElementById('previewCard').classList.add('active');
             updateWorkflowButtons();
-            if (currentType === 'selesai' && autoWASelesai) {
-                sendAutoWA(currentNota, 'selesai');
-            } else if (currentType === 'ambil' && currentNota.ambil?.status === 'diambil' && autoWAAmbil) {
-                sendAutoWA(currentNota, 'ambil');
-            }
-            if (document.getElementById('printThermal').checked && confirm('Cetak ke printer thermal?')) setTimeout(() => printBluetooth(), 1000);
+            if (currentType === 'selesai' && autoWASelesai) sendAutoWA(currentNota, 'selesai');
+            else if (currentType === 'ambil' && currentNota.ambil?.status === 'diambil' && autoWAAmbil) sendAutoWA(currentNota, 'ambil');
         } catch (err) { console.error(err); showToast('Kesalahan menyimpan nota'); } finally { hideLoading(); }
-    }
-
-    function getKondisi() {
-        let arr = [];
-        document.querySelectorAll('.kondisi-checkbox.active').forEach(el => arr.push(el.dataset.value));
-        let lainnya = document.getElementById('kondisiLainnya').value.trim();
-        if (lainnya) arr.push(escapeHtml(lainnya));
-        return arr;
     }
 
     function renderPreview() {
@@ -579,7 +678,15 @@ const app = (function() {
         html+=`<div><strong>Keluhan:</strong> ${currentNota.keluhan}</div>`;
         if(currentNota.kelengkapan?.length) html+=`<div style="margin-top:5px;"><strong>Kelengkapan:</strong> ${currentNota.kelengkapan.join(', ')}</div>`;
         if(currentNota.kondisi?.length) html+=`<div style="margin-top:5px;"><strong>Kondisi Fisik:</strong> ${currentNota.kondisi.join(', ')}</div>`;
-        if(currentNota.fotoDevice) html+=`<div style="margin-top:8px;"><img src="${currentNota.fotoDevice}" style="max-width:100%; max-height:100px; border-radius:8px;"></div>`;
+        if(currentNota.fotoDevice) {
+            let imgSrc = '';
+            if (currentNota.fotoDevice.type === 'file' && isCapacitor()) {
+                imgSrc = currentNota.fotoDevice.path;
+            } else if (currentNota.fotoDevice.type === 'base64') {
+                imgSrc = currentNota.fotoDevice.data;
+            }
+            if (imgSrc) html+=`<div style="margin-top:8px;"><img src="${imgSrc}" style="max-width:100%; max-height:100px; border-radius:8px;"></div>`;
+        }
         if(currentNota.catatan) html+=`<div style="margin-top:5px;"><strong>📝 Catatan:</strong> ${currentNota.catatan}</div>`;
         if(currentType==='diagnosa' && currentNota.diagnosa){
             html+=`<div style="margin-top:10px;"><strong>🔍 Hasil Diagnosa:</strong> ${currentNota.diagnosa.hasil||'-'}</div>`;
@@ -611,24 +718,18 @@ const app = (function() {
             });
             html+=`</div>`;
         }
-
         let footer = (footers[currentType]?.enabled && footers[currentType]?.text) ? footers[currentType].text : '';
         if(footer) html+=`<div class="nota-footer">${escapeHtml(footer).replace(/\n/g,'<br>')}</div>`;
-
         const warranty = getWarrantyText(currentNota);
         if (warranty) html += `<div class="warranty-text">${warranty}</div>`;
-
         if((currentType==='terima' || currentType==='ambil') && skText.trim()){
             html+=`<div class="syarat-section"><strong>📜 SYARAT & KETENTUAN</strong>${escapeHtml(skText).replace(/\n/g,'<br>')}</div>`;
         }
-
         html+=`<div style="text-align:center; margin-top:20px; font-size:11px; color:#999;">Terima kasih atas kepercayaan Anda<br>Simpan nota ini sebagai bukti</div>`;
         document.getElementById('notaContent').innerHTML = html;
         document.getElementById('notaContent').className = `nota-paper ${paperClass}`;
     }
-
     function isNotaLocked() { return currentNota && currentNota.type === 'ambil'; }
-
     function updateWorkflowButtons() {
         let container = document.getElementById('workflowButtons');
         if(!currentNota){ container.innerHTML=''; return; }
@@ -643,7 +744,6 @@ const app = (function() {
         if(btns) container.innerHTML=`<div style="margin-bottom:10px; font-size:13px;">📌 Lanjutkan ke tahap berikutnya:</div>${btns}`;
         else container.innerHTML='';
     }
-
     async function lanjutKe(tipeBaru) {
         if(!currentNota || isNotaLocked()){ showToast('Nota terkunci, tidak dapat dilanjutkan'); return; }
         document.getElementById('nama').value = currentNota.nama;
@@ -667,11 +767,20 @@ const app = (function() {
             let lainnya = currentNota.kondisi.filter(k => !['Penyok','Lecet','Retak','Basah','Lainnya'].includes(k)).join(', ');
             document.getElementById('kondisiLainnya').value = lainnya;
         }
-        if(currentNota.fotoDevice){
-            fotoDeviceData = currentNota.fotoDevice;
-            let preview = document.getElementById('fotoPreview');
-            preview.innerHTML = `<img src="${fotoDeviceData}" style="max-width:100%; max-height:100px;">`;
-            preview.style.display = 'block';
+        if(currentNota.fotoDevice) {
+            if (currentNota.fotoDevice.type === 'base64') {
+                fotoDeviceData = currentNota.fotoDevice.data;
+                fotoDevicePath = null;
+                let preview = document.getElementById('fotoPreview');
+                preview.innerHTML = `<img src="${fotoDeviceData}" style="max-width:100%; max-height:100px;">`;
+                preview.style.display = 'block';
+            } else if (currentNota.fotoDevice.type === 'file') {
+                fotoDevicePath = currentNota.fotoDevice.path;
+                fotoDeviceData = null;
+                let preview = document.getElementById('fotoPreview');
+                preview.innerHTML = `<img src="${fotoDevicePath}" style="max-width:100%; max-height:100px;">`;
+                preview.style.display = 'block';
+            }
         }
         if(currentNota.kelengkapan) {
             document.querySelectorAll('#kelengkapanSection input[type="checkbox"]').forEach(cb => cb.checked = currentNota.kelengkapan.includes(cb.value));
@@ -695,6 +804,7 @@ const app = (function() {
         showToast(`Silakan lengkapi data untuk tahap ${tipeBaru.toUpperCase()}`);
     }
 
+    // ---------------------- Capture Image untuk PDF/WA ----------------------
     async function captureNotaAsImage(targetWidth = 400, quality = 0.8, scale = 2.5) {
         const notaElem = document.getElementById('notaContent');
         const originalWidth = notaElem.style.width;
@@ -706,6 +816,107 @@ const app = (function() {
         notaElem.style.width = originalWidth;
         notaElem.className = originalClass;
         return new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+    }
+
+    // ---------------------- NATIVE FUNCTIONS (Contact, Camera, Share) ----------------------
+    async function importContact() {
+        if (isCapacitor()) {
+            const Contacts = getPlugin('Contacts');
+            if (Contacts) {
+                try {
+                    const permission = await Contacts.requestPermissions();
+                    if (permission.contacts === 'granted') {
+                        const result = await Contacts.pickContact();
+                        if (result && result.contact) {
+                            const name = result.contact.name?.displayName || result.contact.name?.givenName || '';
+                            document.getElementById('nama').value = name;
+                            const phone = result.contact.phoneNumbers?.[0]?.number || '';
+                            let cleaned = phone.replace(/\D/g, '');
+                            if (cleaned.startsWith('62')) cleaned = '0' + cleaned.substring(2);
+                            if (cleaned.startsWith('+62')) cleaned = '0' + cleaned.substring(3);
+                            document.getElementById('nohp').value = cleaned;
+                            showToast('Kontak diimport');
+                        }
+                    } else {
+                        showToast('Izin kontak diperlukan');
+                    }
+                } catch (e) {
+                    showToast('Gagal mengakses kontak: ' + e.message);
+                }
+            } else {
+                showToast('Plugin kontak tidak tersedia');
+            }
+        } else if ('contacts' in navigator && navigator.contacts) {
+            try {
+                let contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+                if (contacts.length) {
+                    document.getElementById('nama').value = contacts[0].name[0];
+                    let phone = contacts[0].tel[0];
+                    phone = phone.replace(/\D/g, '');
+                    if (phone.startsWith('62')) phone = '0' + phone.substring(2);
+                    if (phone.startsWith('+62')) phone = '0' + phone.substring(3);
+                    document.getElementById('nohp').value = phone;
+                    showToast('Kontak diimport');
+                }
+            } catch (e) {
+                showToast('Gagal mengakses kontak');
+            }
+        } else {
+            showToast('Fitur kontak tidak tersedia di browser ini');
+        }
+    }
+
+    async function saveContact() {
+        const nama = document.getElementById('nama').value.trim();
+        let nohp = document.getElementById('nohp').value.trim();
+        if (!nama) { showToast('Isi nama pelanggan terlebih dahulu'); return; }
+        if (!nohp) { showToast('Isi nomor HP pelanggan terlebih dahulu'); return; }
+        nohp = nohp.replace(/\D/g, '');
+        if (!nohp) { showToast('Nomor HP tidak valid'); return; }
+        const vCard = `BEGIN:VCARD
+VERSION:3.0
+FN:${nama}
+TEL;TYPE=CELL:${nohp}
+END:VCARD`;
+
+        if (isCapacitor()) {
+            const Filesystem = getPlugin('Filesystem');
+            const Share = getPlugin('Share');
+            if (Filesystem && Share) {
+                try {
+                    const fileName = `${nama.replace(/\s/g, '_')}.vcf`;
+                    const result = await Filesystem.writeFile({
+                        path: fileName,
+                        data: vCard,
+                        directory: 'CACHE',
+                        recursive: true
+                    });
+                    const uri = result.uri;
+                    await Share.share({
+                        title: 'Simpan Kontak',
+                        text: `Kontak ${nama}`,
+                        files: [uri],
+                        dialogTitle: 'Simpan ke kontak'
+                    });
+                    showToast('Kontak siap disimpan');
+                } catch (err) {
+                    showToast('Gagal: ' + err.message);
+                }
+            } else {
+                showToast('Plugin tidak tersedia');
+            }
+        } else {
+            const blob = new Blob([vCard], { type: 'text/vcard' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${nama}.vcf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('File kontak dibuat. Buka dengan aplikasi Kontak.');
+        }
     }
 
     async function kirimWA(mode){
@@ -734,56 +945,133 @@ const app = (function() {
             showLoading();
             try{
                 const blob = await captureNotaAsImage(400, 0.8, 2.5);
-                if(navigator.share && navigator.canShare({files:[new File([blob], 'nota.jpg', {type:'image/jpeg'})]})) {
-                    await navigator.share({files:[new File([blob], 'nota.jpg', {type:'image/jpeg'})], title:`Nota ${currentNota.notaId}`});
+                const file = new File([blob], `Nota_${currentNota.notaId}.jpg`, { type: 'image/jpeg' });
+                if (isCapacitor()) {
+                    const Share = getPlugin('Share');
+                    if (Share) {
+                        await Share.share({
+                            title: `Nota ${currentNota.notaId}`,
+                            text: `Nota service untuk ${currentNota.nama}`,
+                            files: [file],
+                            dialogTitle: 'Kirim ke WhatsApp'
+                        });
+                        showToast('Berhasil dibagikan');
+                    } else {
+                        showToast('Plugin share tidak tersedia');
+                    }
+                } else if (navigator.share && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: `Nota ${currentNota.notaId}` });
                 } else {
                     const a = document.createElement('a');
                     a.href = URL.createObjectURL(blob);
                     a.download = `Nota_${currentNota.notaId}.jpg`;
                     a.click();
+                    URL.revokeObjectURL(a.href);
+                    showToast('Gambar disimpan, silakan kirim manual');
                 }
             } catch(e){ showToast('Gagal membuat gambar: ' + e.message); }
-            hideLoading();
+            finally { hideLoading(); }
         }
     }
 
+    // ---------------------- Bluetooth Printer dengan saved ID ----------------------
     class ThermalPrinter {
         constructor() { this.paperSize = localStorage.getItem('printer_size')||'58'; }
-        async print(data){
-            showLoading();
-            try{
-                let encoder = new EscPosEncoder();
-                encoder.initialize();
-                // Untuk ukuran 75mm dan 80mm, gunakan lebar karakter double (width=2)
-                if (this.paperSize === '80' || this.paperSize === '75') {
-                    encoder.width(2);
+        async encodeData(data) {
+            let encoder = new EscPosEncoder();
+            encoder.initialize();
+            if (this.paperSize === '80' || this.paperSize === '75') encoder.width(2);
+            encoder.align('center').text(data.toko||'Service HP').newline();
+            if (data.slogan) encoder.align('center').text(data.slogan).newline();
+            if (data.telepon) encoder.align('center').text(`📞 ${data.telepon}`).newline();
+            encoder.text('===============================').newline().align('left');
+            encoder.text(`No   : ${data.id}`).newline().text(`Tgl  : ${data.tanggal}`).newline().text(`Nama : ${data.nama}`).newline().text(`HP   : ${data.nohp}`).newline().text(`Device: ${data.device}`).newline().text('-------------------------------').newline().text('Keluhan:').newline().text(data.keluhan).newline().text('-------------------------------').newline();
+            if(data.biaya>0) encoder.align('right').text(`Total: Rp ${data.biaya}`).newline().align('left');
+            encoder.align('center').text('\nTerima Kasih\n');
+            if(data.footer) encoder.text(data.footer).newline();
+            encoder.text('Simpan Nota Ini').newline().cut();
+            return encoder.encode();
+        }
+        async print(data) {
+            const bytes = await this.encodeData(data);
+            if (isCapacitor()) {
+                const BluetoothLE = getPlugin('BluetoothLE');
+                if (BluetoothLE) {
+                    try {
+                        await BluetoothLE.requestPermissions();
+                        await BluetoothLE.initialize();
+                        let deviceId = lastPrinterId;
+                        let device;
+                        if (deviceId) {
+                            try {
+                                await BluetoothLE.connect(deviceId);
+                                device = { deviceId };
+                            } catch(e) {
+                                showToast('ID printer tersimpan tidak valid, akan scan ulang');
+                                deviceId = null;
+                            }
+                        }
+                        if (!deviceId) {
+                            // Scan selama 5 detik
+                            const devices = await new Promise((resolve) => {
+                                let found = [];
+                                const unsubscribe = BluetoothLE.addListener('onScanResult', (result) => { found.push(result); });
+                                BluetoothLE.startScan({ services: [] }).then(() => {
+                                    setTimeout(async () => {
+                                        await BluetoothLE.stopScan();
+                                        unsubscribe.remove();
+                                        resolve(found);
+                                    }, 5000);
+                                });
+                            });
+                            if (devices.length === 0) throw new Error('Printer tidak ditemukan');
+                            device = devices[0];
+                            deviceId = device.device.deviceId;
+                            await BluetoothLE.connect(deviceId);
+                            // Simpan ID
+                            localStorage.setItem('last_printer_id', deviceId);
+                            lastPrinterId = deviceId;
+                            document.getElementById('printerDeviceId').value = deviceId;
+                        }
+                        await BluetoothLE.write({
+                            deviceId: deviceId,
+                            service: '000018f0-0000-1000-8000-00805f9b34fb',
+                            characteristic: '00002af0-0000-1000-8000-00805f9b34fb',
+                            value: Array.from(bytes)
+                        });
+                        await BluetoothLE.disconnect(deviceId);
+                        showToast('✅ Nota terkirim ke printer');
+                        return;
+                    } catch (e) { throw new Error('Gagal cetak: ' + e.message); }
+                } else { throw new Error('Plugin Bluetooth tidak tersedia'); }
+            }
+            // Fallback Web Bluetooth
+            if (navigator.bluetooth) {
+                let device;
+                if (lastPrinterId) {
+                    // Web Bluetooth tidak support reconnect by deviceId, tetap harus request device
                 }
-                encoder.align('center').text(data.toko||'Service HP').newline();
-                if (data.slogan) encoder.align('center').text(data.slogan).newline();
-                if (data.telepon) encoder.align('center').text(`📞 ${data.telepon}`).newline();
-                encoder.text('===============================').newline().align('left');
-                encoder.text(`No   : ${data.id}`).newline().text(`Tgl  : ${data.tanggal}`).newline().text(`Nama : ${data.nama}`).newline().text(`HP   : ${data.nohp}`).newline().text(`Device: ${data.device}`).newline().text('-------------------------------').newline().text('Keluhan:').newline().text(data.keluhan).newline().text('-------------------------------').newline();
-                if(data.biaya>0) encoder.align('right').text(`Total: Rp ${data.biaya}`).newline().align('left');
-                encoder.align('center').text('\nTerima Kasih\n');
-                if(data.footer) encoder.text(data.footer).newline();
-                encoder.text('Simpan Nota Ini').newline().cut();
-                let cmd = encoder.encode();
-                if(navigator.bluetooth){
-                    let device = await navigator.bluetooth.requestDevice({filters:[{namePrefix:'Printer'},{namePrefix:'XP-'}], optionalServices:['000018f0-0000-1000-8000-00805f9b34fb']});
-                    let server = await device.gatt.connect();
-                    let service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-                    let chars = await service.getCharacteristics();
-                    let char = chars.find(c=>c.properties.write||c.properties.writeWithoutResponse);
-                    if(char) await char.writeValue(cmd);
-                } else { showToast('Bluetooth tidak didukung browser ini. Coba cetak ke PDF.'); }
-                hideLoading(); showToast('✅ Nota terkirim ke printer');
-            } catch(e){ hideLoading(); showToast('❌ Gagal print: '+e.message); }
+                device = await navigator.bluetooth.requestDevice({
+                    filters: [{ namePrefix: 'Printer' }, { namePrefix: 'XP-' }],
+                    optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb']
+                });
+                let server = await device.gatt.connect();
+                let service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
+                let chars = await service.getCharacteristics();
+                let char = chars.find(c => c.properties.write || c.properties.writeWithoutResponse);
+                if (char) await char.writeValue(bytes);
+                showToast('✅ Nota terkirim ke printer');
+                return;
+            }
+            throw new Error('Tidak ada metode Bluetooth yang tersedia');
         }
     }
     const printer = new ThermalPrinter();
-    async function printBluetooth(){ 
-        if(currentNota) {
-            printer.print({ 
+    async function printBluetooth() { 
+        if (!currentNota) { showToast('Buat nota dulu'); return; }
+        showLoading();
+        try {
+            await printer.print({ 
                 toko: tokoSettings.nama||'Service HP',
                 slogan: tokoSettings.slogan || '',
                 telepon: tokoSettings.telepon || '',
@@ -794,11 +1082,32 @@ const app = (function() {
                 device: currentNota.device, 
                 keluhan: currentNota.keluhan, 
                 biaya: currentNota.totalBiaya, 
-                footer: footers[currentType]?.enabled?footers[currentType].text:''
+                footer: footers[currentType]?.enabled ? footers[currentType].text : ''
             });
-        } else showToast('Buat nota dulu'); 
+        } catch (e) {
+            console.error(e);
+            showToast('❌ Gagal cetak thermal: ' + e.message + '. Beralih ke PDF.');
+            generatePDF();
+        } finally { hideLoading(); }
+    }
+    function savePrinterId() {
+        let id = document.getElementById('printerDeviceId').value.trim();
+        if (id) {
+            localStorage.setItem('last_printer_id', id);
+            lastPrinterId = id;
+            showToast('ID printer disimpan');
+        } else {
+            showToast('ID tidak boleh kosong');
+        }
+    }
+    function clearPrinterId() {
+        localStorage.removeItem('last_printer_id');
+        lastPrinterId = '';
+        document.getElementById('printerDeviceId').value = '';
+        showToast('ID printer dihapus');
     }
 
+    // ---------------------- PDF ----------------------
     async function generatePDF(){
         showLoading();
         try{
@@ -824,10 +1133,9 @@ const app = (function() {
         hideLoading();
     }
 
-    // ========== PREVIEW THERMAL ==========
+    // ---------------------- Thermal Preview ----------------------
     function previewThermal() {
         if (!currentNota) { showToast('Buat nota terlebih dahulu'); return; }
-        // Generate teks preview seperti yang akan dicetak thermal
         const data = {
             toko: tokoSettings.nama || 'Service HP',
             slogan: tokoSettings.slogan || '',
@@ -856,27 +1164,66 @@ const app = (function() {
         lines.push('Keluhan:');
         lines.push(data.keluhan);
         lines.push('-------------------------------');
-        if (data.biaya > 0) {
-            lines.push(`Total: Rp ${formatRupiah(data.biaya)}`);
-        }
+        if (data.biaya > 0) lines.push(`Total: Rp ${formatRupiah(data.biaya)}`);
         lines.push('-------------------------------');
         lines.push('Terima Kasih');
         if (data.footer) lines.push(data.footer);
         lines.push('Simpan Nota Ini');
         lines.push('===============================');
-        // Tampilkan modal
-        const modal = document.getElementById('thermalPreviewModal');
-        const pre = document.getElementById('thermalPreviewText');
-        pre.textContent = lines.join('\n');
-        modal.classList.add('active');
+        document.getElementById('thermalPreviewText').textContent = lines.join('\n');
+        document.getElementById('thermalPreviewModal').classList.add('active');
+    }
+    function closeThermalPreview() { document.getElementById('thermalPreviewModal').classList.remove('active'); }
+
+    // ---------------------- Backup ke Google Drive (via share) ----------------------
+    async function backupToDrive() {
+        if (!historyData.length) {
+            showToast('Tidak ada data untuk di-backup');
+            return;
+        }
+        const data = { settings:tokoSettings, history:historyData, logo:logoData, footers:footers, sk:skText, autoWASelesai, autoWAAmbil, waNotifTemplate, exported:new Date() };
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], {type: 'application/json'});
+        const file = new File([blob], `Backup_${new Date().toISOString().slice(0,10)}.json`, { type: 'application/json' });
+        if (isCapacitor()) {
+            const Share = getPlugin('Share');
+            if (Share) {
+                try {
+                    await Share.share({
+                        title: 'Backup Data Nota Service',
+                        text: 'Simpan file ini ke Google Drive atau penyimpanan lain',
+                        files: [file],
+                        dialogTitle: 'Backup Data'
+                    });
+                    showToast('File backup siap dibagikan');
+                } catch(e) {
+                    showToast('Gagal share: ' + e.message);
+                }
+            } else {
+                fallbackDownload(json);
+            }
+        } else if (navigator.share && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({ files: [file], title: 'Backup Data Nota Service' });
+                showToast('Backup berhasil dibagikan');
+            } catch(e) {
+                fallbackDownload(json);
+            }
+        } else {
+            fallbackDownload(json);
+        }
+        function fallbackDownload(json) {
+            const a = document.createElement('a');
+            const url = URL.createObjectURL(new Blob([json], {type: 'application/json'}));
+            a.href = url;
+            a.download = `Backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('File backup diunduh, silakan upload ke Drive');
+        }
     }
 
-    function closeThermalPreview() {
-        document.getElementById('thermalPreviewModal').classList.remove('active');
-    }
-
-    // ========== END PREVIEW THERMAL ==========
-
+    // ---------------------- Fungsi Lain (selectType, selectAmbilStatus, resetForm, dll) ----------------------
     function selectType(type) {
         currentType = type;
         ['terima','diagnosa','selesai','ambil'].forEach(t=>{
@@ -889,33 +1236,18 @@ const app = (function() {
         document.getElementById('selesaiSection').style.display = type==='selesai'?'block':'none';
         document.getElementById('ambilSection').style.display = type==='ambil'?'block':'none';
     }
-
     function selectAmbilStatus(status) {
         currentStatus = status;
         document.getElementById('statusDiambil').classList.toggle('active', status==='diambil');
         document.getElementById('statusBatal').classList.toggle('active', status==='batal');
         document.getElementById('alasanBatalGroup').style.display = status==='batal'?'block':'none';
     }
-
-    function handleFotoDevice(input) {
-        let file = input.files[0];
-        if(!file) return;
-        if(file.size > 2*1024*1024){ showToast('Foto maksimal 2MB'); return; }
-        let reader = new FileReader();
-        reader.onload = e => {
-            fotoDeviceData = e.target.result;
-            let preview = document.getElementById('fotoPreview');
-            preview.innerHTML = `<img src="${fotoDeviceData}" style="max-width:100%; max-height:100px; border-radius:8px;">`;
-            preview.style.display = 'block';
-        };
-        reader.readAsDataURL(file);
-    }
-
     function resetForm() {
         document.getElementById('notaForm').reset();
         document.querySelectorAll('.kondisi-checkbox').forEach(c => c.classList.remove('active'));
         document.getElementById('kondisiLainnya').value = '';
         fotoDeviceData = null;
+        fotoDevicePath = null;
         document.getElementById('fotoPreview').innerHTML = '';
         document.getElementById('fotoPreview').style.display = 'none';
         selectType('terima');
@@ -923,7 +1255,6 @@ const app = (function() {
         hitungSisa();
         localStorage.removeItem('nota_draft');
     }
-
     function buatNotaBaru() {
         resetForm();
         document.getElementById('previewCard').classList.remove('active');
@@ -931,19 +1262,12 @@ const app = (function() {
         currentNota = null;
         delete window._lanjutOriginalId;
     }
-
     function backToForm() {
         document.querySelectorAll('.history-card, .settings-card, .preview-card').forEach(c=>c.classList.remove('active'));
         document.getElementById('formCard').classList.add('active');
         delete window._lanjutOriginalId;
     }
-
-    function showHistory() {
-        renderHistory();
-        document.querySelectorAll('.form-card, .preview-card, .settings-card').forEach(c=>c.classList.remove('active'));
-        document.getElementById('historyCard').classList.add('active');
-    }
-
+    function showHistory() { renderHistory(); document.querySelectorAll('.form-card, .preview-card, .settings-card').forEach(c=>c.classList.remove('active')); document.getElementById('historyCard').classList.add('active'); }
     function showSettings() {
         document.getElementById('settingNamaToko').value = tokoSettings.nama||'';
         document.getElementById('settingSlogan').value = tokoSettings.slogan||'';
@@ -971,10 +1295,10 @@ const app = (function() {
         document.getElementById('footerAmbilEnabled').checked = footers.ambil.enabled;
         document.getElementById('skText').value = skText;
         if(logoData) document.getElementById('logoPreview').innerHTML = `<img src="${logoData}" style="max-width:100%;max-height:100%;">`;
+        document.getElementById('printerDeviceId').value = lastPrinterId;
         document.querySelectorAll('.form-card, .preview-card, .history-card').forEach(c=>c.classList.remove('active'));
         document.getElementById('settingsCard').classList.add('active');
     }
-
     function saveSettings() {
         tokoSettings = {
             nama: document.getElementById('settingNamaToko').value,
@@ -1010,7 +1334,6 @@ const app = (function() {
         showToast('Pengaturan disimpan');
         backToForm();
     }
-
     function handleLogo(e) {
         let file = e.target.files[0];
         if(!file) return;
@@ -1024,7 +1347,6 @@ const app = (function() {
         };
         reader.readAsDataURL(file);
     }
-
     function removeLogo() {
         logoData = null;
         localStorage.removeItem('toko_logo');
@@ -1032,29 +1354,10 @@ const app = (function() {
         document.getElementById('headerIcon').innerHTML = '📱';
         showToast('Logo dihapus');
     }
-
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem('dark_mode', document.body.classList.contains('dark-mode'));
     }
-
-    async function importContact() {
-        if('contacts' in navigator && navigator.contacts) {
-            try {
-                let contacts = await navigator.contacts.select(['name','tel'], {multiple: false});
-                if(contacts.length) {
-                    document.getElementById('nama').value = contacts[0].name[0];
-                    let phone = contacts[0].tel[0];
-                    phone = phone.replace(/\D/g,'');
-                    if(phone.startsWith('62')) phone = '0'+phone.substring(2);
-                    if(phone.startsWith('+62')) phone = '0'+phone.substring(3);
-                    document.getElementById('nohp').value = phone;
-                    showToast('Kontak diimport');
-                }
-            } catch(e) { showToast('Gagal mengakses kontak'); }
-        } else { showToast('Fitur kontak tidak tersedia'); }
-    }
-
     async function renderHistory() {
         await loadHistory();
         let search = document.getElementById('searchHistory').value.toLowerCase();
@@ -1079,7 +1382,6 @@ const app = (function() {
             </div>
         `).join('');
     }
-
     async function loadHistoryItem(id) {
         let nota = historyData.find(h => h.id === id);
         if(nota){
@@ -1091,7 +1393,6 @@ const app = (function() {
             document.getElementById('previewCard').classList.add('active');
         }
     }
-
     function exportCSV() {
         if(!historyData.length) return;
         let csv = '\ufeffNo,ID,OriginalID,Tanggal,Jam,Tipe,Nama,NoHP,Device,Keluhan,Kondisi,Password,TotalBiaya,DP,Sisa,Catatan\n';
@@ -1104,7 +1405,6 @@ const app = (function() {
         a.download = `Riwayat_${new Date().toISOString().slice(0,10)}.csv`;
         a.click();
     }
-
     function exportJSON() {
         let data = { settings:tokoSettings, history:historyData, logo:logoData, footers:footers, sk:skText, autoWASelesai, autoWAAmbil, waNotifTemplate, exported:new Date() };
         let json = JSON.stringify(data,null,2);
@@ -1114,7 +1414,6 @@ const app = (function() {
         a.download = `Backup_${new Date().toISOString().slice(0,10)}.json`;
         a.click();
     }
-
     async function restoreData(e) {
         let file = e.target.files[0];
         if(!file || !confirm('⚠️ Ini akan menimpa data yang ada. Lanjutkan?')) return;
@@ -1145,7 +1444,6 @@ const app = (function() {
         };
         reader.readAsText(file);
     }
-
     function clearAllData() {
         if(confirm('⚠️ Hapus semua data? Tidak bisa dikembalikan!')) {
             indexedDB.deleteDatabase('NotaServiceDB');
@@ -1155,6 +1453,7 @@ const app = (function() {
         }
     }
 
+    // ---------------------- Inisialisasi ----------------------
     async function init() {
         await initDB();
         let saved = localStorage.getItem('toko_settings');
@@ -1164,11 +1463,12 @@ const app = (function() {
         if(localStorage.getItem('dark_mode') === 'true') document.body.classList.add('dark-mode');
         let f = localStorage.getItem('footers_settings');
         if(f) footers = JSON.parse(f);
-        skText = localStorage.getItem('sk_text') || '• Resiko kehilangan data bukan tanggung jawab kami.\n• Barang yang tidak diambil dalam 30 hari dianggap hangus.\n• Garansi hanya berlaku pada sparepart yang diganti.';
+        skText = localStorage.getItem('sk_text') || '• Resiko kehilangan data bukan tanggung jawab kami.\n• Barang tidak diambil dalam 30 hari dianggap hangus.\n• Garansi hanya berlaku pada sparepart yang diganti.';
         if(!localStorage.getItem('wa_template')) localStorage.setItem('wa_template', '*{toko}*\n━━━━━━━━━━━━━━━\n{type_badge}\n━━━━━━━━━━━━━━━\n\n🆔 No: *{nota_id}*\n📅 {tanggal} | ⏰ {jam}\n\n👤 *Pelanggan:* {nama}\n📱 *Device:* {device}\n\n📋 *Keluhan:*\n{keluhan}\n\n{kelengkapan_line}\n💰 *Estimasi Biaya:* Rp {biaya}\n⏳ *Estimasi Waktu:* {estimasi}\n\n📝 *Catatan:* {catatan}\n\n━━━━━━━━━━━━\n{footer}');
         autoWASelesai = localStorage.getItem('auto_wa_selesai') === 'true';
         autoWAAmbil = localStorage.getItem('auto_wa_ambil') === 'true';
         waNotifTemplate = localStorage.getItem('wa_notif_template') || "Halo {nama}, perangkat {device} Anda sudah *{status}*. Silakan ambil di toko kami. Terima kasih 🙏\n\n{nota_id}";
+        lastPrinterId = localStorage.getItem('last_printer_id') || '';
         document.getElementById('tokoNameDisplay').innerText = tokoSettings.nama||'Nota Service HP';
         document.getElementById('tokoSloganDisplay').innerText = tokoSettings.slogan||'';
         if(tokoSettings.primaryColor){
@@ -1202,23 +1502,20 @@ const app = (function() {
     }
 
     return {
-        init,
-        selectType, selectAmbilStatus, buatPreview, renderPreview, updateWorkflowButtons, lanjutKe,
+        init, selectType, selectAmbilStatus, buatPreview, renderPreview, updateWorkflowButtons, lanjutKe,
         kirimWA, printBluetooth, generatePDF, exportCSV, exportJSON, restoreData, clearAllData,
         showHistory, showSettings, saveSettings, handleLogo, removeLogo, toggleDarkMode, backToForm,
         buatNotaBaru, resetForm, importContact, handleFotoDevice, cleanPhoneInput, validatePhone,
-        hitungSisa, loadHistoryItem, renderHistory, backupData: exportJSON,
-        previewThermal, closeThermalPreview
+        hitungSisa, loadHistoryItem, renderHistory, backupData: exportJSON, backupToDrive,
+        previewThermal, closeThermalPreview, saveContact, savePrinterId, clearPrinterId
     };
 })();
 
 app.init();
 
-// Registrasi Service Worker (PWA)
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/service-worker.js')
-        .then(reg => console.log('Service Worker registered', reg))
-        .catch(err => console.log('Service Worker registration failed', err));
+// Service worker diabaikan untuk Capacitor (tidak diperlukan)
+if ('serviceWorker' in navigator && !window.isCapacitor?.()) {
+    navigator.serviceWorker.register('/service-worker.js').catch(err => console.log('Service Worker tidak terdaftar:', err));
 }
 </script>
 </body>
